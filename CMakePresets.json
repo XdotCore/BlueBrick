@@ -1,0 +1,44 @@
+{
+  "version": 3,
+  "configurePresets": [
+    {
+      "name": "base",
+      "hidden": true,
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/out/build/${presetName}",
+      "installDir": "${sourceDir}/out/install/${presetName}",
+      "cacheVariables": {
+        "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake"
+      }
+    },
+
+    {
+      "name": "MarvelSuperHeroes1Base",
+      "hidden": true,
+      "inherits": "base",
+      "architecture": {
+        "value": "x86",
+        "strategy": "external"
+      },
+      "cacheVariables": {
+        "TARGET_GAME": "MarvelSuperHeroes1"
+      }
+    },
+    {
+      "name": "MarvelSuperHeroes1Debug",
+      "displayName": "Marvel Super Heroes 1 Debug",
+      "inherits": "MarvelSuperHeroes1Base",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug"
+      }
+    },
+    {
+      "name": "MarvelSuperHeroes1Release",
+      "displayName": "Marvel Super Heroes 1 Release",
+      "inherits": "MarvelSuperHeroes1Base",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "RelWithDebInfo"
+      }
+    }
+  ]
+}

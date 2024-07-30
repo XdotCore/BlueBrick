@@ -1,0 +1,7 @@
+# IDE
+.vs
+.vscode
+
+# Build
+out
+vcpkg_installed
