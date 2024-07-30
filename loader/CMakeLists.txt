@@ -14,8 +14,6 @@ target_include_directories(${PROJECT_NAME} PRIVATE ${DETOURS_INCLUDE_DIRS})
 target_link_libraries(${PROJECT_NAME} PRIVATE ${DETOURS_LIBRARY})
 
 add_compile_definitions(TARGET_GAME="${TARGET_GAME}")
-if (${TARGET_GAME} STREQUAL "MarvelSuperHeroes1")
-	target_include_directories(${PROJECT_NAME} PRIVATE "include/MarvelSuperHeroes1/")
-endif()
+target_include_directories(${PROJECT_NAME} PRIVATE "include/Games/${TARGET_GAME}/")
 
 add_subdirectory("launcher")
