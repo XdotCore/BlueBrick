@@ -7,13 +7,18 @@ set_target_properties(${PROJECT_NAME} PROPERTIES
 	OUTPUT_NAME "BlueBrick"
 )
 
-find_path(DETOURS_INCLUDE_DIRS "detours/detours.h")
-find_library(DETOURS_LIBRARY detours REQUIRED)
+include(FetchContent)
 
-target_include_directories(${PROJECT_NAME} PRIVATE ${DETOURS_INCLUDE_DIRS})
-target_link_libraries(${PROJECT_NAME} PRIVATE ${DETOURS_LIBRARY})
+FetchContent_Declare(
+    rcmp
+    GIT_REPOSITORY "https://github.com/Smertig/rcmp.git"
+    GIT_TAG "origin/master"
+)
+FetchContent_MakeAvailable(rcmp)
+target_link_libraries(${PROJECT_NAME} PRIVATE rcmp)
 
 add_compile_definitions(TARGET_GAME="${TARGET_GAME}")
 target_include_directories(${PROJECT_NAME} PRIVATE "include/Games/${TARGET_GAME}/")
+target_include_directories(${PROJECT_NAME} PRIVATE "include/Universal/")
 
 add_subdirectory("launcher")
