@@ -23,6 +23,8 @@ add_compile_definitions(TARGET_GAME="${TARGET_GAME}")
 target_include_directories(${PROJECT_NAME} PRIVATE "include/Games/${TARGET_GAME}/")
 target_include_directories(${PROJECT_NAME} PRIVATE "include/Universal/")
 
+add_compile_definitions(BLUEBRICK_EXPORTING)
+
 add_subdirectory("launcher")
 
 set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
