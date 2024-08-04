@@ -2,6 +2,12 @@
 #include <format>
 #include <cstdint>
 #include <rcmp.hpp>
+#include "Logger/Logger.hpp"
+
+using namespace BlueBrick;
+
+// The logger instance used for main BlueBrick logs
+Logger MainLogger(nullptr);
 
 void AttachHooks() {
 	intptr_t base = (intptr_t)GetModuleHandle(NULL);
@@ -10,6 +16,8 @@ void AttachHooks() {
 		MessageBoxA(NULL, "Coin", "Coin", MB_OK);
 		original(coinsPtr, toAdd, multEnabled, param_4);
 	});
+
+	MainLogger.Message("Hooked AddToCoins 0x{:x}", 0x7E1070 + base);
 }
 
 BOOL WINAPI DllMain(HINSTANCE dll, DWORD reason, LPVOID _) {

@@ -1,7 +1,9 @@
 project(BlueBrick-Loader VERSION ${BLUEBRICK_VERSION} LANGUAGES C CXX)
 
 add_library(${PROJECT_NAME} SHARED
-	src/main.cpp)
+	"src/main.cpp"
+	"src/Logger/Logger.cpp"
+	"src/Mod/Mod.cpp")
 set_target_properties(${PROJECT_NAME} PROPERTIES
 	PREFIX ""
 	OUTPUT_NAME "BlueBrick"
