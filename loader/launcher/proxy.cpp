@@ -65,7 +65,7 @@ extern "C" DWORD XInputGetCapabilities(DWORD dwUserIndex, DWORD dwFlags, XINPUT_
 BOOL WINAPI DllMain(HINSTANCE dll, DWORD reason, LPVOID _) {
 	switch (reason) {
 		case DLL_PROCESS_ATTACH:
-			if (!LoadLibraryW(L"BlueBrick.dll"))
+			if (!LoadLibraryW(L"BlueBrick/BlueBrick.dll"))
 				MessageBoxW(NULL, L"Failed to load BlueBrick.dll.\nCheck if it has been installed correctly.", L"Error", MB_OK);
 
 			break;
