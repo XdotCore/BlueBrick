@@ -1,12 +1,18 @@
 project(BlueBrick-Loader VERSION ${BLUEBRICK_VERSION} LANGUAGES C CXX)
 
-add_library(${PROJECT_NAME} SHARED
-	"src/main.cpp"
-	"src/Logger/Logger.cpp"
-	"src/Mod/Mod.cpp")
+file(GLOB SOURCES CONFIGURE_DEPENDS
+	"src/*.cpp"
+	"src/Logger/*.cpp"
+	"src/Mod/*.cpp")
+
+configure_file("src/version.rc.in" "version.rc")
+set(SOURCES ${SOURCES} "${CMAKE_CURRENT_BINARY_DIR}/version.rc")
+
+add_library(${PROJECT_NAME} SHARED ${SOURCES})
 set_target_properties(${PROJECT_NAME} PROPERTIES
 	PREFIX ""
 	OUTPUT_NAME "BlueBrick"
+	VERSION ${BLUEBRICK_VERSION}
 )
 
 include(FetchContent)
