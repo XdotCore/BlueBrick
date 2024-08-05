@@ -13,9 +13,9 @@ namespace BlueBrick {
 		Logger* Logger;
 
 		struct Info {
-			const std::string& Name;
-			const std::string& Version;
-			const std::string& Author;
+			const std::string Name;
+			const std::string Version;
+			const std::string Author;
 		};
 
 		virtual Info GetInfo() = 0;
