@@ -40,10 +40,15 @@ void LoadMods() {
 			continue;
 
 		Mod* mod = reinterpret_cast<Mod*>(modEntry());
+		if (mod == nullptr)
+			continue;
+
 		Logger* logger = new Logger(mod);
 		mod->Logger = logger;
+
 		Mod::Info info = mod->GetInfo();
 		MainLogger.Message("Loaded {} v{} by {}", info.Name, info.Version, info.Author);
+
 		mod->OnInitialized();
 	}
 }
