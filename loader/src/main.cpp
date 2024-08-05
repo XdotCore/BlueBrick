@@ -27,7 +27,7 @@ void LoadMods() {
 	std::filesystem::create_directories(modsDir);
 
 	for (const std::filesystem::directory_entry& modFile : std::filesystem::directory_iterator(modsDir)) {
-		if (!std::filesystem::is_regular_file(modFile))
+		if (!std::filesystem::is_regular_file(modFile) || !modFile.path().has_extension() || modFile.path().extension().string() != ".dll")
 			continue;
 
 		HMODULE modHandle = LoadLibraryA(modFile.path().string().c_str());
