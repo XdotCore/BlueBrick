@@ -1,9 +1,10 @@
 project(BlueBrick-Loader VERSION ${BLUEBRICK_VERSION} LANGUAGES C CXX)
 
-file(GLOB SOURCES CONFIGURE_DEPENDS
+file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS
 	"src/*.cpp"
-	"src/Logger/*.cpp"
-	"src/Mod/*.cpp")
+	"src/Universal/*.cpp"
+	"src/Games/${TARGET_GAME}/*.cpp"
+)
 
 configure_file("src/version.rc.in" "version.rc")
 set(SOURCES ${SOURCES} "${CMAKE_CURRENT_BINARY_DIR}/version.rc")
