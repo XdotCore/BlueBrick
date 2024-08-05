@@ -26,15 +26,21 @@ FetchContent_MakeAvailable(rcmp)
 target_link_libraries(${PROJECT_NAME} PRIVATE rcmp)
 
 add_compile_definitions(TARGET_GAME="${TARGET_GAME}")
-target_include_directories(${PROJECT_NAME} PRIVATE "include/Games/${TARGET_GAME}/")
-target_include_directories(${PROJECT_NAME} PRIVATE "include/Universal/")
+target_include_directories(${PROJECT_NAME} PRIVATE
+	"include/Games/${TARGET_GAME}/"
+	"include/Universal/"
+)
 
 add_compile_definitions(BLUEBRICK_EXPORTING)
 
 add_subdirectory("launcher")
+add_subdirectory("test")
 
 set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
 install(TARGETS ProxyLauncher RUNTIME DESTINATION ".")
 install(TARGETS ${PROJECT_NAME} DESTINATION "BlueBrick/")
 install(DIRECTORY "include/Games/${TARGET_GAME}" DESTINATION "BlueBrick/include/")
 install(DIRECTORY "include/Universal" DESTINATION "BlueBrick/include/")
+if (COMPILE_TEST_MODS)
+	install(TARGETS TestMod RUNTIME DESTINATION "BlueBrick/Mods/")
+endif()

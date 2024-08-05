@@ -1,7 +1,9 @@
 #include <windows.h>
-#include <format>
+#include <filesystem>
+#include <string>
 #include <cstdint>
 #include <rcmp.hpp>
+#include "Mod/Mod.hpp"
 #include "Logger/Logger.hpp"
 
 using namespace BlueBrick;
@@ -20,10 +22,37 @@ void AttachHooks() {
 	MainLogger.Message("Hooked AddToCoins 0x{:x}", 0x7E1070 + base);
 }
 
+void LoadMods() {
+	const std::filesystem::path modsDir = "BlueBrick/Mods";
+	std::filesystem::create_directories(modsDir);
+
+	for (const std::filesystem::directory_entry& modFile : std::filesystem::directory_iterator(modsDir)) {
+		if (!std::filesystem::is_regular_file(modFile))
+			continue;
+
+		MainLogger.Message(modFile.path().string());
+
+		HMODULE modHandle = LoadLibraryA(modFile.path().string().c_str());
+		if (modHandle == nullptr || modHandle == INVALID_HANDLE_VALUE)
+			continue;
+
+		using ModEntry = void* (*)();
+		ModEntry modEntry = reinterpret_cast<ModEntry>(GetProcAddress(modHandle, "modEntry"));
+		if (modEntry == nullptr)
+			continue;
+
+		Mod* mod = reinterpret_cast<Mod*>(modEntry());
+		Logger* logger = new Logger(mod);
+		mod->Logger = logger;
+		MainLogger.Message("Loaded {} v{}", mod->GetName(), mod->GetVersion());
+		mod->OnInitialized();
+	}
+}
+
 BOOL WINAPI DllMain(HINSTANCE dll, DWORD reason, LPVOID _) {
 	switch (reason) {
 		case DLL_PROCESS_ATTACH: {
-			AttachHooks();
+			LoadMods();
 		} break;
 	}
 

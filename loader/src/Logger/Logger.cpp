@@ -1,4 +1,5 @@
 #include "Logger/Logger.hpp"
+#include "Mod/Mod.hpp"
 #include <windows.h>
 #include <iostream>
 #include <chrono>
@@ -87,8 +88,8 @@ namespace BlueBrick {
 			std::cout << std::format("{:%H:%M:%OS} ", nowLocal);
 
 			// mod name
-			std::cout << "[" << (isMain ? "Main" : "Mod") << "] ";
-			std::cout << "[" << (isMain ? "BlueBrick" : mod->Name) << "]: ";
+			std::cout << "[" << (isMain ? "Loader" : "Mod") << "] ";
+			std::cout << "[" << (isMain ? "BlueBrick" : mod->GetName()) << "]: ";
 
 			// message
 			std::cout << message << std::endl;

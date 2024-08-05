@@ -2,10 +2,10 @@
 
 #include <string>
 #include <format>
-#include "Mod/Mod.hpp"
 #include "Export.hpp"
 
 namespace BlueBrick {
+	class Mod;
 
 	class BLUEBRICK_DLL Logger final {
 	private:
