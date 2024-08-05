@@ -3,12 +3,8 @@
 
 $ModEntry(TestMod) {
 public:
-	std::string GetName() override {
-		return "TestMod";
-	}
-
-	std::string GetVersion() override {
-		return "1.0.0";
+	Info GetInfo() override {
+		return { "TestMod", "1.0.0", "X.Core" };
 	}
 
 	void OnInitialized() override {

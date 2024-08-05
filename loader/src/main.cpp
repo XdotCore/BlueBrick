@@ -30,8 +30,6 @@ void LoadMods() {
 		if (!std::filesystem::is_regular_file(modFile))
 			continue;
 
-		MainLogger.Message(modFile.path().string());
-
 		HMODULE modHandle = LoadLibraryA(modFile.path().string().c_str());
 		if (modHandle == nullptr || modHandle == INVALID_HANDLE_VALUE)
 			continue;
@@ -44,7 +42,8 @@ void LoadMods() {
 		Mod* mod = reinterpret_cast<Mod*>(modEntry());
 		Logger* logger = new Logger(mod);
 		mod->Logger = logger;
-		MainLogger.Message("Loaded {} v{}", mod->GetName(), mod->GetVersion());
+		Mod::Info info = mod->GetInfo();
+		MainLogger.Message("Loaded {} v{} by {}", info.Name, info.Version, info.Author);
 		mod->OnInitialized();
 	}
 }

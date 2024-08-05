@@ -89,7 +89,7 @@ namespace BlueBrick {
 
 			// mod name
 			std::cout << "[" << (isMain ? "Loader" : "Mod") << "] ";
-			std::cout << "[" << (isMain ? "BlueBrick" : mod->GetName()) << "]: ";
+			std::cout << "[" << (isMain ? "BlueBrick" : mod->GetInfo().Name) << "]: ";
 
 			// message
 			std::cout << message << std::endl;

@@ -14,7 +14,7 @@
 * BLUEBRICK_API void* modEntry() {
 *	return BlueBrick::Mod::Get<TestMod>();
 * }
-* class TestMod fincal : public BlueBrick::Mod {
+* class TestMod final : public BlueBrick::Mod {
 *	...
 * }
 */
