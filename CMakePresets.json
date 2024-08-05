@@ -13,9 +13,27 @@
     },
 
     {
-      "name": "MarvelSuperHeroes1Base",
+      "name": "debug",
       "hidden": true,
       "inherits": "base",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "COMPILE_TEST_MODS": true
+      }
+    },
+    {
+      "name": "release",
+      "hidden": true,
+      "inherits": "base",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+        "COMPILE_TEST_MODS": false
+      }
+    },
+
+    {
+      "name": "MarvelSuperHeroes1Base",
+      "hidden": true,
       "architecture": {
         "value": "x86",
         "strategy": "external"
@@ -27,18 +45,12 @@
     {
       "name": "MarvelSuperHeroes1Debug",
       "displayName": "Marvel Super Heroes 1 Debug",
-      "inherits": "MarvelSuperHeroes1Base",
-      "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Debug"
-      }
+      "inherits": [ "MarvelSuperHeroes1Base", "debug" ]
     },
     {
       "name": "MarvelSuperHeroes1Release",
       "displayName": "Marvel Super Heroes 1 Release",
-      "inherits": "MarvelSuperHeroes1Base",
-      "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "RelWithDebInfo"
-      }
+      "inherits": [ "MarvelSuperHeroes1Base", "release" ]
     }
   ]
 }
