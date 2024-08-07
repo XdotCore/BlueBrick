@@ -3,7 +3,6 @@
 #include "rcmp.hpp"
 #include "Hooking/ClassManager.hpp"
 #include "Logger/Logger.hpp"
-#include <typeinfo>
 #include <string>
 
 extern BlueBrick::Logger MainLogger;

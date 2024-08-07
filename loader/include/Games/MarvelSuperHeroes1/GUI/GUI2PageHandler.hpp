@@ -7,7 +7,7 @@ namespace Lego::GUI {
 
 	class BLUEBRICK_DLL GUI2PageHandler : public CSListLink<GUI2PageHandler> {
 	public:
-		bool bool0x0;
+		bool bool_0x0;
 		char* name;
 		GUI2Page* page;
 		int int_0xc;

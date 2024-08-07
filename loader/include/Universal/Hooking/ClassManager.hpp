@@ -2,7 +2,6 @@
 
 #include "Export.hpp"
 #include "FuncData.hpp"
-#include <utility>
 
 namespace BlueBrick {
 

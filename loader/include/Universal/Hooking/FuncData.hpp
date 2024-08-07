@@ -3,7 +3,6 @@
 #include "Export.hpp"
 #include "CallConv.hpp"
 #include <vector>
-#include <memory>
 
 namespace BlueBrick {
 

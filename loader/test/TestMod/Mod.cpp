@@ -1,5 +1,4 @@
 #include "Mod/Mod.hpp"
-#include "Mod/ModEntry.hpp"
 #include "GUI/Flow/Screens/MainMenuScreen.hpp"
 
 using namespace BlueBrick;

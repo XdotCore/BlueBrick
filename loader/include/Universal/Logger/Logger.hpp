@@ -1,8 +1,8 @@
 #pragma once
 
+#include "Export.hpp"
 #include <string>
 #include <format>
-#include "Export.hpp"
 
 namespace BlueBrick {
 	class Mod;

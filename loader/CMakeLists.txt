@@ -42,7 +42,7 @@ target_include_directories(${PROJECT_NAME} PUBLIC
 	"include/Internal/"
 )
 
-add_compile_definitions(BLUEBRICK_EXPORTING)
+target_compile_definitions(${PROJECT_NAME} PRIVATE BLUEBRICK_EXPORTING)
 
 add_subdirectory("launcher")
 add_subdirectory("test")

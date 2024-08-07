@@ -1,16 +1,15 @@
 #pragma once
 
-#include <string>
 #include "Export.hpp"
-#include "ModEntry.hpp"
 #include "Logger/Logger.hpp"
+#include <string>
 
 namespace BlueBrick {
 
-	class BLUEBRICK_DLL Mod {
+	class Mod {
 	private:
 	public:
-		Logger* Logger;
+		Logger* Logger = nullptr;
 
 		struct Info {
 			const std::string Name;
@@ -30,3 +29,26 @@ namespace BlueBrick {
 	};
 
 }
+
+/**
+* Auto-generates the entry function for loading the mod
+*
+* e.g.
+* $ModEntry(TestMod) {
+*	...
+* }
+*
+* expands to
+*
+* class TestMod;
+* BLUEBRICK_API void* modEntry() {
+*	return BlueBrick::Mod::Get<TestMod>();
+* }
+* class TestMod final : public BlueBrick::Mod {
+*	...
+* }
+*/
+
+#define $ModEntry(MOD_NAME) class MOD_NAME;\
+	BLUEBRICK_API void* modEntry() { return BlueBrick::Mod::Get<MOD_NAME>(); } \
+	class MOD_NAME final : public BlueBrick::Mod

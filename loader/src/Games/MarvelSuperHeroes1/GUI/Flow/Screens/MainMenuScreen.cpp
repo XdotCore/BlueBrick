@@ -1,7 +1,6 @@
 #include "GUI/Flow/Screens/MainMenuScreen.hpp"
 #include "Logger/Logger.hpp"
 #include "HookHelpers.hpp"
-#include "rcmp.hpp"
 
 using namespace Lego::Events;
 using namespace Lego::GUI;
@@ -13,13 +12,13 @@ using CallConv = BlueBrick::CallConv;
 extern BlueBrick::Logger MainLogger;
 
 void ClassManager::Init() {
-	HookHelpers::HookFunction<class Tag1>(&MainMenuScreen::GUI2PageHandler_dtor,   "MainMenuScreen::GUI2PageHandler_dtor");
-	HookHelpers::HookFunction<class Tag2>(&MainMenuScreen::Update,                 "MainMenuScreen::Update");
-	HookHelpers::HookFunction<class Tag3>(&MainMenuScreen::GetGui2Manager_int_0xc, "MainMenuScreen::GetGui2Manager_int_0xc");
-	HookHelpers::HookFunction<class Tag4>(&MainMenuScreen::Return2,                "MainMenuScreen::Return2");
-	HookHelpers::HookFunction<class Tag5>(&MainMenuScreen::SetGUI2Manager_int_0xc, "MainMenuScreen::SetGUI2Manager_int_0xc");
-	HookHelpers::HookFunction<class Tag6>(&MainMenuScreen::IEventListener_dtor,    "MainMenuScreen::IEventListener_dtor");
-	HookHelpers::HookFunction<class Tag7>(&MainMenuScreen::RecieveEvent,           "MainMenuScreen::RecieveEvent");
+	HookHelpers::HookFunction<class v0_f0>(&MainMenuScreen::GUI2PageHandler_dtor,   "MainMenuScreen::GUI2PageHandler_dtor");
+	HookHelpers::HookFunction<class v0_f1>(&MainMenuScreen::Update,                 "MainMenuScreen::Update");
+	HookHelpers::HookFunction<class v0_f2>(&MainMenuScreen::GetGui2Manager_int_0xc, "MainMenuScreen::GetGui2Manager_int_0xc");
+	HookHelpers::HookFunction<class v0_f3>(&MainMenuScreen::Return2,                "MainMenuScreen::Return2");
+	HookHelpers::HookFunction<class v0_f4>(&MainMenuScreen::SetGUI2Manager_int_0xc, "MainMenuScreen::SetGUI2Manager_int_0xc");
+	HookHelpers::HookFunction<class v1_f0>(&MainMenuScreen::IEventListener_dtor,    "MainMenuScreen::IEventListener_dtor");
+	HookHelpers::HookFunction<class v1_f1>(&MainMenuScreen::RecieveEvent,           "MainMenuScreen::RecieveEvent");
 }
 
 namespace Lego::GUI {

@@ -1,11 +1,9 @@
 #pragma once
 
-#include "Export.hpp"
-
 namespace Lego {
 	
 	template<class T>
-	class BLUEBRICK_DLL CSListLink {
+	class CSListLink {
 	public:
 		T* prev;
 		T* next;
