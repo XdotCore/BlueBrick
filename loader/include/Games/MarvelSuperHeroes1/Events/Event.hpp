@@ -1,8 +1,10 @@
 #pragma once
 
+#include "Export.hpp"
+
 namespace Lego::Events {
 
 	// TODO: fill in class
-	class Event;
+	class BLUEBRICK_DLL Event;
 
 }

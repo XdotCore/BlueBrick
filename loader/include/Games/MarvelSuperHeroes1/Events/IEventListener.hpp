@@ -1,10 +1,11 @@
 #pragma once
 
+#include "Export.hpp"
 #include "Events/Event.hpp"
 
 namespace Lego::Events {
 
-	class IEventListener {
+	class BLUEBRICK_DLL IEventListener {
 	public:
 		void* ptr0x0;
 		void* ptr0x4;

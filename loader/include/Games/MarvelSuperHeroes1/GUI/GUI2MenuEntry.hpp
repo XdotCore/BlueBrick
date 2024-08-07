@@ -1,11 +1,13 @@
 #pragma once
 
+#include "Export.hpp"
+
 namespace Lego::GUI {
 
 	// TODO: fill out class
-	class GUI2MenuEntry;
+	class BLUEBRICK_DLL GUI2MenuEntry;
 
-	struct GUI2MenuEntryTextOverride {
+	struct BLUEBRICK_DLL GUI2MenuEntryTextOverride {
 	public:
 		short state;
 		char* overrideText;

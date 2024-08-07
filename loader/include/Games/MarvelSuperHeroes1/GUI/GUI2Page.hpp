@@ -1,15 +1,17 @@
 #pragma once
 
+#include "Export.hpp"
+
 namespace Lego::GUI {
 
 	// TODO: fill in class
-	class GUI2Page;
+	class BLUEBRICK_DLL GUI2Page;
 
-	enum PageState {
-		PageState_Init = 0x1,
-		PageState_Entered = 0x2,
-		PageState_Input = 0xe,
-		PageState_Exit = 0xf
+	enum class BLUEBRICK_DLL PageState {
+		Init = 0x1,
+		Entered = 0x2,
+		Input = 0xe,
+		Exit = 0xf
 	};
 
 }
