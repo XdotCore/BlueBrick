@@ -11,7 +11,7 @@ namespace BlueBrick {
 	/// </summary>
 	/// <typeparam name="Class"> The class that it is working on </typeparam>
 	template<class Class>
-	class BLUEBRICK_DLL ClassManager final {
+	class ClassManager final {
 	private:
 		ClassManager() = delete;
 		ClassManager(const ClassManager&) = delete;
@@ -28,6 +28,9 @@ namespace BlueBrick {
 			return false;
 		}
 
+		static inline bool calledInit = false;
+		static void Init() { }
+
 	public:
 		
 		/// <summary>
@@ -38,7 +41,9 @@ namespace BlueBrick {
 		/// <param name="func"> The mirrored function within the BlueBrick library </param>
 		/// <returns> The function information, or nullptr if not found </returns>
 		template<typename Ret, typename... Args>
-		static FuncData* GetFuncData(Ret(Class::* func)(Args...));
+		static FuncData* GetFuncData(Ret(Class::* func)(Args...)) {
+			return nullptr;
+		}
 
 		/// <summary>
 		/// Calls the original member function (with hooks)
@@ -46,12 +51,18 @@ namespace BlueBrick {
 		/// <typeparam name="Ret"> The return type of the function </typeparam>
 		/// <typeparam name="...Args"> The argument types of the function </typeparam>
 		/// <param name="func"> The mirrored function within the BlueBrick library </param>
+		/// <param name="_this"> The class instance to be passed into the function </param>
+		/// <param name="args"> The arguments to be passed into the function </param>
 		/// <returns> The result of calling the function, or a default value if the function is not found </returns>
 		template<typename Ret, typename... Args>
 		static Ret CallFunc(Ret(Class::* func)(Args...), Class* _this, Args... args) {
 			FuncData* data = GetFuncData(func);
-			if (data == nullptr)
-				return default;
+			if (data == nullptr) {
+				if constexpr (std::is_same_v<Ret, void>)
+					return;
+				else
+					return {};
+			}
 
 			void* toCall = data->GetFunc();
 
@@ -77,6 +88,48 @@ namespace BlueBrick {
 					using CallType = Ret(*)(Class*, Args...);
 					return ((CallType)toCall)(_this, std::forward<Args>(args)...);
 				}
+			}
+		}
+
+		/// <summary>
+		/// Adds a function to call before the given function
+		/// </summary>
+		/// <typeparam name="...Args"> The return type of the function </typeparam>
+		/// <typeparam name="Ret"> The argument types of the function </typeparam>
+		/// <param name="func"> The mirrored function within the BlueBrick library </param>
+		/// <param name="prefix"> The function to be called </param>
+		template<typename Ret, typename... Args>
+		static void AttachPrefix(Ret(Class::* func)(Args...), Ret(*prefix)(Class*, Args...)) {
+			FuncData* data = GetFuncData(func);
+			if (data == nullptr)
+				return;
+
+			data->AddPrefix(prefix);
+
+			if (!calledInit) {
+				Init();
+				calledInit = true;
+			}
+		}
+
+		/// <summary>
+		/// Adds a function to call after the given function
+		/// </summary>
+		/// <typeparam name="...Args"> The return type of the function </typeparam>
+		/// <typeparam name="Ret"> The argument types of the function </typeparam>
+		/// <param name="func"> The mirrored function within the BlueBrick library </param>
+		/// <param name="postfix"> The function to be called </param>
+		template<typename Ret, typename... Args>
+		static void AttachPostfix(Ret(Class::* func)(Args...), Ret(*postfix)(Class*, Args...)) {
+			FuncData* data = GetFuncData(func);
+			if (data == nullptr)
+				return;
+
+			data->AddPostfix(postfix);
+
+			if (!calledInit) {
+				Init();
+				calledInit = true;
 			}
 		}
 	};

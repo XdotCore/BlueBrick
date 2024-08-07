@@ -11,7 +11,7 @@ namespace Lego::Events {
 		void* ptr0x4;
 
 		virtual void IEventListener_dtor();
-		virtual void RecieveEvent(Event* event);
+		virtual void RecieveEvent(Event* event, int a);
 		virtual bool vfunction3(void* unk);
 	};
 

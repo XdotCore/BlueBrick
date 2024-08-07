@@ -2,6 +2,8 @@
 
 #include "Export.hpp"
 #include "CallConv.hpp"
+#include <vector>
+#include <memory>
 
 namespace BlueBrick {
 
@@ -19,6 +21,10 @@ namespace BlueBrick {
 		// virtual
 		void** vftable;
 		unsigned int index;
+
+		// hooks
+		std::vector<void*>* prefixHooks;
+		std::vector<void*>* postfixHooks;
 	public:
 		/// <summary>
 		/// Gets whether or not this function comes from a vftable
@@ -62,6 +68,37 @@ namespace BlueBrick {
 		/// Gets the pointer for the function
 		/// </summary>
 		void* GetFunc() const;
+
+		/// <summary>
+		/// Gets the pointer to the vftable at the index
+		/// </summary>
+		/// <returns> The pointer, or nullptr if not virtual </returns>
+		void* GetVftableAtIndex() const;
+
+		/// <summary>
+		/// Adds a prefix hook
+		/// </summary>
+		void AddPrefix(void* prefix);
+
+		/// <summary>
+		/// Gets all the prefixes that have been added
+		/// </summary>
+		const std::vector<void*>* GetPrefixes() const;
+
+		/// <summary>
+		/// Adds a postfix hook
+		/// </summary>
+		void AddPostfix(void* postfix);
+
+		/// <summary>
+		/// Gets all the postfixes that have been added
+		/// </summary>
+		const std::vector<void*>* GetPostfixes() const;
+
+		/// <summary>
+		/// Destructor
+		/// </summary>
+		~FuncData();
 	};
 
 }

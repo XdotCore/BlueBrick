@@ -11,6 +11,17 @@
 namespace Lego::GUI {
 
 	class BLUEBRICK_DLL MainMenuScreen : public FlowPageHandler2, public Events::IEventListener {
+	private:
+		static BlueBrick::FuncData* GUI2PageHandler_dtor_data();
+		static BlueBrick::FuncData* Update_data();
+
+		static BlueBrick::FuncData* GetGUI2Manager_int_0xc_data();
+		static BlueBrick::FuncData* Return2_data();
+		static BlueBrick::FuncData* SetGUI2Manager_int_0xc_data();
+
+		static BlueBrick::FuncData* IEventListener_dtor_data();
+		static BlueBrick::FuncData* RecieveEvent_data();
+
 	public:
 		GUI2Page* page;
 		uint8_t bitfield_0x4;
@@ -49,46 +60,35 @@ namespace Lego::GUI {
 		virtual void SetGUI2Manager_int_0xc(int val);
 
 		void IEventListener_dtor() override;
-		void RecieveEvent(Events::Event* event) override;
+		void RecieveEvent(Events::Event* event, int a) override;
+
+		friend BlueBrick::ClassManager<MainMenuScreen>;
 	};
 
 }
 
 template<>
+BLUEBRICK_DLL void BlueBrick::ClassManager<Lego::GUI::MainMenuScreen>::Init();
+
+template<>
 template<typename Ret, typename... Args>
 BlueBrick::FuncData* BlueBrick::ClassManager<Lego::GUI::MainMenuScreen>::GetFuncData(Ret(Lego::GUI::MainMenuScreen::* func)(Args...)) {
 	using namespace Lego::GUI;
-	static void** vftable_for_FlowPageHandler2 = (void**)0xDD5948;
-	static void** vftable_for_IEventListener = (void**)0xDD5938;
 
-	if (IsSameAndEqual(func, &MainMenuScreen::GUI2PageHandler_dtor)) {
-		static FuncData funcData(vftable_for_FlowPageHandler2, 0, CallConv::Thiscall);
-		return &funcData;
-	}
-	if (IsSameAndEqual(func, &MainMenuScreen::Update)) {
-		static FuncData funcData(vftable_for_FlowPageHandler2, 1, CallConv::Thiscall);
-		return &funcData;
-	}
-	if (IsSameAndEqual(func, &MainMenuScreen::GetGui2Manager_int_0xc)) {
-		static FuncData funcData(vftable_for_FlowPageHandler2, 2, CallConv::Thiscall);
-		return &funcData;
-	}
-	if (IsSameAndEqual(func, &MainMenuScreen::Return2)) {
-		static FuncData funcData(vftable_for_FlowPageHandler2, 3, CallConv::Stdcall);
-		return &funcData;
-	}
-	if (IsSameAndEqual(func, &MainMenuScreen::SetGUI2Manager_int_0xc)) {
-		static FuncData funcData(vftable_for_FlowPageHandler2, 4, CallConv::Thiscall);
-		return &funcData;
-	}
-	if (IsSameAndEqual(func, &MainMenuScreen::IEventListener_dtor)) {
-		static FuncData funcData(vftable_for_IEventListener, 0, CallConv::Thiscall);
-		return &funcData;
-	}
-	if (IsSameAndEqual(func, &MainMenuScreen::RecieveEvent)) {
-		static FuncData funcData(vftable_for_IEventListener, 1, CallConv::Thiscall);
-		return &funcData;
-	}
+	if (IsSameAndEqual(func, &MainMenuScreen::GUI2PageHandler_dtor))
+		return MainMenuScreen::GUI2PageHandler_dtor_data();
+	if (IsSameAndEqual(func, &MainMenuScreen::Update))
+		return MainMenuScreen::Update_data();
+	if (IsSameAndEqual(func, &MainMenuScreen::GetGui2Manager_int_0xc))
+		return MainMenuScreen::GetGUI2Manager_int_0xc_data();
+	if (IsSameAndEqual(func, &MainMenuScreen::Return2))
+		return MainMenuScreen::Return2_data();
+	if (IsSameAndEqual(func, &MainMenuScreen::SetGUI2Manager_int_0xc))
+		return MainMenuScreen::SetGUI2Manager_int_0xc_data();
+	if (IsSameAndEqual(func, &MainMenuScreen::IEventListener_dtor))
+		return MainMenuScreen::IEventListener_dtor_data();
+	if (IsSameAndEqual(func, &MainMenuScreen::RecieveEvent))
+		return MainMenuScreen::RecieveEvent_data();
 
 	return nullptr;
 }

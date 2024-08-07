@@ -58,15 +58,9 @@ void LoadMods() {
 BOOL WINAPI DllMain(HINSTANCE dll, DWORD reason, LPVOID _) {
 	switch (reason) {
 		case DLL_PROCESS_ATTACH: {
-			LoadMods();
-
 			MessageBoxA(NULL, "for debugging", "a", MB_OK);
 
-			Lego::GUI::MainMenuScreen mms;
-			mms.SetGUI2Manager_int_0xc(25);
-			MainLogger.Message("{}", mms.GetGui2Manager_int_0xc());
-			MainLogger.Message("{}", mms.Return2());
-			MainLogger.Message("did it");
+			LoadMods();
 		} break;
 	}
 
