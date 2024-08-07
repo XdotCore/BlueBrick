@@ -36,9 +36,9 @@ namespace BlueBrick {
 		/// <typeparam name="Ret"> The return type of the function </typeparam>
 		/// <typeparam name="...Args"> The argument types of the function </typeparam>
 		/// <param name="func"> The mirrored function within the BlueBrick library </param>
-		/// <returns> The function information </returns>
+		/// <returns> The function information, or nullptr if not found </returns>
 		template<typename Ret, typename... Args>
-		static FuncData GetFuncData(Ret(Class::* func)(Args...));
+		static FuncData* GetFuncData(Ret(Class::* func)(Args...));
 
 		/// <summary>
 		/// Calls the original member function (with hooks)
@@ -46,14 +46,17 @@ namespace BlueBrick {
 		/// <typeparam name="Ret"> The return type of the function </typeparam>
 		/// <typeparam name="...Args"> The argument types of the function </typeparam>
 		/// <param name="func"> The mirrored function within the BlueBrick library </param>
-		/// <returns> The result of calling the function </returns>
+		/// <returns> The result of calling the function, or a default value if the function is not found </returns>
 		template<typename Ret, typename... Args>
 		static Ret CallFunc(Ret(Class::* func)(Args...), Class* _this, Args... args) {
-			FuncData data = GetFuncData(func);
-			void* toCall = data.GetFunc();
+			FuncData* data = GetFuncData(func);
+			if (data == nullptr)
+				return default;
 
-			// TODO: find a way to make this into generics possibly
-			switch (data.CallConv()) {
+			void* toCall = data->GetFunc();
+
+			// TODO: find a way to make this into templates possibly
+			switch (data->CallConv()) {
 				case CallConv::Cdecl: {
 					using CallType = Ret(__cdecl*)(Class*, Args...);
 					return ((CallType)toCall)(_this, std::forward<Args>(args)...);
