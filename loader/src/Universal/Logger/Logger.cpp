@@ -1,5 +1,5 @@
 #include "Logger/Logger.hpp"
-#include "Logger/Color.hpp"
+#include "Logger/Color/Color.hpp"
 #include "Mod/Mod.hpp"
 #include <windows.h>
 #include <iostream>
