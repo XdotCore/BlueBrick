@@ -22,17 +22,22 @@ namespace BlueBrick {
 		/// Writes a message to the log
 		/// </summary>
 		/// <param name="msg"> The message </param>
-		void Message(std::string msg);
+		void Message(const std::string& msg);
 
 		/// <summary>
 		/// Writes a formatted message to the log, see std::format
 		/// </summary>
 		/// <param name="fmt"> The message format </param>
 		/// <param name="args"> The message args </param>
-		template <class... Args>
-		void Message(std::string fmt, Args&&... args) {
-			std::string formatted = std::vformat(fmt, std::make_format_args(args...));
-			Message(formatted);
+		template<class... Args>
+		void Message(const std::string& fmt, Args&&... args) {
+			try {
+				std::string formatted = std::vformat(fmt, std::make_format_args(args...));
+				Message(formatted);
+			}
+			catch (std::format_error formatError) {
+				Message("Format Error: {}", formatError.what());
+			}
 		}
 	};
 

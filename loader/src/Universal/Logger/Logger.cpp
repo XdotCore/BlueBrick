@@ -65,6 +65,7 @@ namespace BlueBrick {
 
 		// enable output types
 		SetConsoleCP(CP_UTF8);
+		SetConsoleOutputCP(CP_UTF8);
 		EnableColor(outputHandle);
 
 		return true;
@@ -78,7 +79,7 @@ namespace BlueBrick {
 		return canUseColor;
 	}
 
-	void Logger::Message(std::string message) {
+	void Logger::Message(const std::string& message) {
 		if (InitLogger()) {
 			bool isMain = this == &MainLogger;
 

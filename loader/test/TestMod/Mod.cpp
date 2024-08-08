@@ -1,4 +1,4 @@
-#include "Mod/Mod.hpp"
+﻿#include "Mod/Mod.hpp"
 #include "GUI/Flow/Screens/MainMenuScreen.hpp"
 
 using namespace BlueBrick;
@@ -13,7 +13,7 @@ public:
 	}
 
 	void OnInitialized() override {
-		Logger->Message("Hello from test mod");
+		Logger->Message("Hello from test mod 😘💩");
 		TestModLogger = Logger;
 
 		ClassManager<MainMenuScreen>::AttachPrefix(&MainMenuScreen::Update, a);
