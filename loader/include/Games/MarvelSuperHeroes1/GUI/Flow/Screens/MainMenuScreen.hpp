@@ -6,7 +6,7 @@
 #include "GUI/GUI2Page.hpp"
 #include "GUI/GUI2MenuEntry.hpp"
 #include "Hooking/ClassManager.hpp"
-#include <cstdint>
+#include "Types.hpp"
 
 namespace Lego::GUI {
 
@@ -24,7 +24,7 @@ namespace Lego::GUI {
 
 	public:
 		GUI2Page* page;
-		uint8_t bitfield_0x4;
+		byte bitfield_0x4;
 		GUI2MenuEntry* menuEntries[12];
 		GUI2MenuEntry* newGameMenuEntry;
 		GUI2MenuEntry* freeplayMenuEntry;
@@ -38,7 +38,7 @@ namespace Lego::GUI {
 		GUI2MenuEntry* quitToWindowsMenuEntry;
 		GUI2MenuEntry* languageMenuEntry;
 		GUI2MenuEntry* helpMenuEntry;
-		uint32_t enabledMenuEntries;
+		uint enabledMenuEntries;
 		short short_0x6c;
 		GUI2MenuEntryTextOverride menuEntryTextOverrides[12];
 		bool bool_0xd0;
