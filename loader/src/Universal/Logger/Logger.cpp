@@ -1,4 +1,5 @@
 #include "Logger/Logger.hpp"
+#include "Logger/Color.hpp"
 #include "Mod/Mod.hpp"
 #include <windows.h>
 #include <iostream>
@@ -93,7 +94,7 @@ namespace BlueBrick {
 			std::cout << "[" << (isMain ? "BlueBrick" : mod->GetInfo().Name) << "]: ";
 
 			// message
-			std::cout << message << std::endl;
+			std::cout << message << Color::End() << std::endl;
 		}
 	}
 

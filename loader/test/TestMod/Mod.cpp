@@ -1,5 +1,6 @@
 ﻿#include "Mod/Mod.hpp"
 #include "GUI/Flow/Screens/MainMenuScreen.hpp"
+#include "Logger/Color.hpp"
 
 using namespace BlueBrick;
 using namespace Lego::GUI;
@@ -13,7 +14,7 @@ public:
 	}
 
 	void OnInitialized() override {
-		Logger->Message("Hello from test mod 😘💩");
+		Logger->Message("Hello from test mod {1}😘💩{0} hello again {2} oog", Color::End(), Color(0xaf70f5), Color(0xfcba03));
 		TestModLogger = Logger;
 
 		ClassManager<MainMenuScreen>::AttachPrefix(&MainMenuScreen::Update, a);
