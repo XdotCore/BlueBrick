@@ -6,7 +6,7 @@
 using namespace BlueBrick;
 
 // The logger instance used for main BlueBrick logs
-Logger MainLogger(nullptr);
+Logger MainLogger = Logger(nullptr);
 
 static void LoadMods() {
 	const std::filesystem::path modsDir = "BlueBrick/Mods";

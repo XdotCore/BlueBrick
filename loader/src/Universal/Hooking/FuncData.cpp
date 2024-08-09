@@ -15,10 +15,12 @@ namespace BlueBrick {
 		return ptr;
 	}
 
-	FuncData::FuncData(void* ptr, BlueBrick::CallConv callConv) : isVirtual(false), callConv(callConv), ptr(ptr), vftable(nullptr), index(0) {
-		prefixHooks = new std::vector<void*>;
-		postfixHooks = new std::vector<void*>;
-	}
+	FuncData::FuncData(void* ptr, BlueBrick::CallConv callConv) :
+		isVirtual(false),
+		callConv(callConv),
+		ptr(ptr),
+		vftable(nullptr),
+		index(0) { }
 
 	void** FuncData::Vftable() const {
 		return vftable;
@@ -28,10 +30,12 @@ namespace BlueBrick {
 		return index;
 	}
 
-	FuncData::FuncData(void** vftable, unsigned int index, BlueBrick::CallConv callConv) : isVirtual(true), callConv(callConv), ptr(nullptr), vftable(vftable), index(index) {
-		prefixHooks = new std::vector<void*>;
-		postfixHooks = new std::vector<void*>;
-	}
+	FuncData::FuncData(void** vftable, unsigned int index, BlueBrick::CallConv callConv) :
+		isVirtual(true),
+		callConv(callConv),
+		ptr(nullptr),
+		vftable(vftable),
+		index(index) { }
 
 	intptr_t offsetByBase(void* ptr) {
 		static intptr_t base = (intptr_t)GetModuleHandle(NULL);
@@ -56,24 +60,19 @@ namespace BlueBrick {
 	}
 
 	void FuncData::AddPrefix(void* prefix) {
-		prefixHooks->push_back(prefix);
+		prefixHooks.push_back(prefix);
 	}
 
-	const std::vector<void*>* FuncData::GetPrefixes() const {
+	const std::vector<void*>& FuncData::GetPrefixes() const {
 		return prefixHooks;
 	}
 
 	void FuncData::AddPostfix(void* postfix) {
-		postfixHooks->push_back(postfix);
+		postfixHooks.push_back(postfix);
 	}
 
-	const std::vector<void*>* FuncData::GetPostfixes() const {
+	const std::vector<void*>& FuncData::GetPostfixes() const {
 		return postfixHooks;
-	}
-
-	FuncData::~FuncData() {
-		delete prefixHooks;
-		delete postfixHooks;
 	}
 
 }

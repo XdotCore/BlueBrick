@@ -12,15 +12,15 @@ namespace Lego::GUI {
 
 	class BLUEBRICK_DLL MainMenuScreen : public FlowPageHandler2, public Events::IEventListener {
 	private:
-		static BlueBrick::FuncData* GUI2PageHandler_dtor_data();
-		static BlueBrick::FuncData* Update_data();
+		static BlueBrick::FuncData& GUI2PageHandler_dtor_data();
+		static BlueBrick::FuncData& Update_data();
 
-		static BlueBrick::FuncData* GetGUI2Manager_int_0xc_data();
-		static BlueBrick::FuncData* Return2_data();
-		static BlueBrick::FuncData* SetGUI2Manager_int_0xc_data();
+		static BlueBrick::FuncData& GetGUI2Manager_int_0xc_data();
+		static BlueBrick::FuncData& Return2_data();
+		static BlueBrick::FuncData& SetGUI2Manager_int_0xc_data();
 
-		static BlueBrick::FuncData* IEventListener_dtor_data();
-		static BlueBrick::FuncData* RecieveEvent_data();
+		static BlueBrick::FuncData& IEventListener_dtor_data();
+		static BlueBrick::FuncData& RecieveEvent_data();
 
 	public:
 		GUI2Page* page;
@@ -72,7 +72,7 @@ BLUEBRICK_DLL void BlueBrick::ClassManager<Lego::GUI::MainMenuScreen>::Init();
 
 template<>
 template<typename Ret, typename... Args>
-BlueBrick::FuncData* BlueBrick::ClassManager<Lego::GUI::MainMenuScreen>::GetFuncData(Ret(Lego::GUI::MainMenuScreen::* func)(Args...)) {
+BlueBrick::FuncData& BlueBrick::ClassManager<Lego::GUI::MainMenuScreen>::GetFuncData(Ret(Lego::GUI::MainMenuScreen::* func)(Args...)) {
 	using namespace Lego::GUI;
 
 	if (IsSameAndEqual(func, &MainMenuScreen::GUI2PageHandler_dtor))
@@ -90,5 +90,5 @@ BlueBrick::FuncData* BlueBrick::ClassManager<Lego::GUI::MainMenuScreen>::GetFunc
 	if (IsSameAndEqual(func, &MainMenuScreen::RecieveEvent))
 		return MainMenuScreen::RecieveEvent_data();
 
-	return nullptr;
+	throw noFuncDataException;
 }

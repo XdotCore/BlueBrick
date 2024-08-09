@@ -29,57 +29,57 @@ namespace Lego::GUI {
 	void MainMenuScreen::GUI2PageHandler_dtor() {
 		ClassManager::CallFunc(&MainMenuScreen::GUI2PageHandler_dtor, this);
 	}
-	FuncData* MainMenuScreen::GUI2PageHandler_dtor_data() {
+	FuncData& MainMenuScreen::GUI2PageHandler_dtor_data() {
 		static FuncData funcData(vftable_for_FlowPageHandler2, 0, CallConv::Thiscall);
-		return &funcData;
+		return funcData;
 	}
 
 	void MainMenuScreen::Update(GUI2Page* page, PageState state, void** managerProcessData) {
 		ClassManager::CallFunc(&MainMenuScreen::Update, this, page, state, managerProcessData);
 	}
-	FuncData* MainMenuScreen::Update_data() {
+	FuncData& MainMenuScreen::Update_data() {
 		static FuncData funcData(vftable_for_FlowPageHandler2, 1, CallConv::Thiscall);
-		return &funcData;
+		return funcData;
 	}
 
 	int MainMenuScreen::GetGui2Manager_int_0xc() {
 		return ClassManager::CallFunc(&MainMenuScreen::GetGui2Manager_int_0xc, this);
 	}
-	FuncData* MainMenuScreen::GetGUI2Manager_int_0xc_data() {
+	FuncData& MainMenuScreen::GetGUI2Manager_int_0xc_data() {
 		static FuncData funcData(vftable_for_FlowPageHandler2, 2, CallConv::Thiscall);
-		return &funcData;
+		return funcData;
 	}
 
 	int MainMenuScreen::Return2() {
 		return ClassManager::CallFunc(&MainMenuScreen::Return2, this);
 	}
-	FuncData* MainMenuScreen::Return2_data() {
+	FuncData& MainMenuScreen::Return2_data() {
 		static FuncData funcData(vftable_for_FlowPageHandler2, 3, CallConv::Stdcall);
-		return &funcData;
+		return funcData;
 	}
 
 	void MainMenuScreen::SetGUI2Manager_int_0xc(int val) {
 		ClassManager::CallFunc(&MainMenuScreen::SetGUI2Manager_int_0xc, this, val);
 	}
-	FuncData* MainMenuScreen::SetGUI2Manager_int_0xc_data() {
+	FuncData& MainMenuScreen::SetGUI2Manager_int_0xc_data() {
 		static FuncData funcData(vftable_for_FlowPageHandler2, 4, CallConv::Thiscall);
-		return &funcData;
+		return funcData;
 	}
 
 	void MainMenuScreen::IEventListener_dtor() {
 		ClassManager::CallFunc(&MainMenuScreen::IEventListener_dtor, this);
 	}
-	FuncData* MainMenuScreen::IEventListener_dtor_data() {
+	FuncData& MainMenuScreen::IEventListener_dtor_data() {
 		static FuncData funcData(vftable_for_IEventListener, 0, CallConv::Thiscall);
-		return &funcData;
+		return funcData;
 	}
 
 	void MainMenuScreen::RecieveEvent(Event* event, int a) {
 		ClassManager::CallFunc(&MainMenuScreen::RecieveEvent, this, event, a);
 	}
-	FuncData* MainMenuScreen::RecieveEvent_data() {
+	FuncData& MainMenuScreen::RecieveEvent_data() {
 		static FuncData funcData(vftable_for_IEventListener, 1, CallConv::Thiscall);
-		return &funcData;
+		return funcData;
 	}
 
 }

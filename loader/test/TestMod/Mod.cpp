@@ -26,15 +26,20 @@ public:
 		Logger->Message(Severity::Warning, "Warning: warning");
 		Logger->Message(Severity::Error, "Error: error");
 
-		ClassManager<MainMenuScreen>::AttachPrefix(&MainMenuScreen::Update, a);
-		ClassManager<MainMenuScreen>::AttachPostfix(&MainMenuScreen::Update, b);
+		try {
+			ClassManager<MainMenuScreen>::AttachPrefix(&MainMenuScreen::Update, a);
+			ClassManager<MainMenuScreen>::AttachPostfix(&MainMenuScreen::Update, b);
+		}
+		catch (std::exception e) {
+			Logger->Message(e.what());
+		}
 	}
 
 	static void a(MainMenuScreen* _this, GUI2Page* page, PageState state, void** m) {
-		TestMod::Logger->Message("Hello world! {}", (int)state);
+		Logger->Message("Hello world! {}", (int)state);
 	}
 
 	static void b(MainMenuScreen* _this, GUI2Page* page, PageState state, void** m) {
-		TestMod::Logger->Message("Goodbye world! {}", (int)state);
+		Logger->Message("Goodbye world! {}", (int)state);
 	}
 };
