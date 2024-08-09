@@ -22,7 +22,7 @@ namespace BlueBrick {
 		/// Tells the console to reset the color
 		/// </summary>
 		/// <returns> The string console code </returns>
-		static const char* End();
+		static const std::string& End();
 	};
 
 }

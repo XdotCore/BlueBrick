@@ -8,7 +8,7 @@ using namespace BlueBrick;
 // The logger instance used for main BlueBrick logs
 Logger MainLogger(nullptr);
 
-void LoadMods() {
+static void LoadMods() {
 	const std::filesystem::path modsDir = "BlueBrick/Mods";
 	std::filesystem::create_directories(modsDir);
 
@@ -20,22 +20,21 @@ void LoadMods() {
 		if (modHandle == nullptr || modHandle == INVALID_HANDLE_VALUE)
 			continue;
 
-		using ModEntry = void* (*)();
+		using ModEntry = Mod& (*)();
 		ModEntry modEntry = reinterpret_cast<ModEntry>(GetProcAddress(modHandle, "modEntry"));
 		if (modEntry == nullptr)
 			continue;
 
-		Mod* mod = reinterpret_cast<Mod*>(modEntry());
-		if (mod == nullptr)
-			continue;
+		Mod& mod = modEntry();
+		ModInfo& info = mod.GetInfo();
+		MainLogger.Message("Loaded {1}{0}{5} v{2} by {4}{3}{5}", /*0*/ info.Name,
+		                                                         /*1*/ info.StartNameColor(),
+		                                                         /*2*/ info.Version,
+		                                                         /*3*/ info.Author,
+		                                                         /*4*/ info.StartAuthorColor(),
+		                                                         /*5*/ ColorBase::End());
 
-		Logger* logger = new Logger(mod);
-		mod->Logger = logger;
-
-		Mod::Info info = mod->GetInfo();
-		MainLogger.Message("Loaded {} v{} by {}", info.Name, info.Version, info.Author);
-
-		mod->OnInitialized();
+		mod.OnInitialized();
 	}
 }
 

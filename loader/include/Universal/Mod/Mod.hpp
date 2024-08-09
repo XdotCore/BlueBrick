@@ -1,29 +1,28 @@
 #pragma once
 
 #include "Export.hpp"
+#include "ModInfo.hpp"
 #include "Logger/Logger.hpp"
+#include "Logger/Color/ColorBase.hpp"
 #include <string>
+#include <optional>
 
 namespace BlueBrick {
 
 	class Mod {
 	private:
 	public:
-		Logger* Logger = nullptr;
+		std::shared_ptr<BlueBrick::Logger> Logger;
 
-		struct Info {
-			const std::string Name;
-			const std::string Version;
-			const std::string Author;
-		};
-
-		virtual Info GetInfo() = 0;
+		virtual ModInfo& GetInfo() = 0;
 
 		virtual void OnInitialized() { }
 
+		BLUEBRICK_DLL Mod();
+
 		template<class Derived>
-		static Derived* Get() {
-			static Derived* mod = new Derived();
+		static Derived& Get() {
+			static Derived mod = Derived();
 			return mod;
 		}
 	};
@@ -50,5 +49,5 @@ namespace BlueBrick {
 */
 
 #define $ModEntry(MOD_NAME) class MOD_NAME;\
-	BLUEBRICK_API void* modEntry() { return BlueBrick::Mod::Get<MOD_NAME>(); } \
+	BLUEBRICK_API MOD_NAME& modEntry() { return BlueBrick::Mod::Get<MOD_NAME>(); } \
 	class MOD_NAME final : public BlueBrick::Mod

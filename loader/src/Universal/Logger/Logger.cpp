@@ -28,7 +28,7 @@ namespace BlueBrick {
 		canUseColor = true;
 	}
 
-	bool InitLogger() {
+	static bool InitLogger() {
 		static HANDLE outputHandle = nullptr;
 
 		if (outputHandle)
@@ -81,20 +81,55 @@ namespace BlueBrick {
 	}
 
 	void Logger::Message(const std::string& message) {
+		Logger::Message(Severity::Info, message);
+	}
+
+	void Logger::Message(Severity severity, const std::string& message) {
 		if (InitLogger()) {
 			bool isMain = this == &MainLogger;
 
-			//time
+			// colors
+			std::string timeColor;
+			std::string typeColor;
+			std::string textColor;
+			std::string nameColor = isMain ? Color::DeepSkyBlue().Start() : mod->GetInfo().StartNameColor();
+
+			switch (severity) {
+				case Severity::Debug: {
+				// the web color "gray" is darker than "dark gray" ...
+					timeColor = Color::Gray().Start();
+					typeColor = textColor = Color::DarkGray().Start();
+				} break;
+				case Severity::Warning: {
+					timeColor = Color::Goldenrod().Start();
+					typeColor = textColor = Color::Yellow().Start();
+				} break;
+				case Severity::Error: {
+					timeColor = Color::Firebrick().Start();
+					typeColor = textColor = Color::Red().Start();
+				} break;
+				default: {
+					timeColor = Color::Gray().Start();
+					typeColor = textColor = Color::End();
+				} break;
+			}
+
+			// time
 			auto now = std::chrono::system_clock::now();
 			auto nowLocal = std::chrono::current_zone()->to_local(now);
-			std::cout << std::format("{:%H:%M:%OS} ", nowLocal);
+			std::string timeText = std::format("{:%H:%M:%OS} ", nowLocal);
+			std::cout << timeColor << timeText << Color::End();
+
+			// message type
+			std::string typeText = isMain ? "Loader" : "Mod";
+			std::cout << "[" << typeColor << typeText << Color::End() << "] ";
 
 			// mod name
-			std::cout << "[" << (isMain ? "Loader" : "Mod") << "] ";
-			std::cout << "[" << (isMain ? "BlueBrick" : mod->GetInfo().Name) << "]: ";
+			std::string nameText = isMain ? "BlueBrick" : mod->GetInfo().Name;
+			std::cout << "[" << nameColor << nameText << Color::End() << "]: ";
 
 			// message
-			std::cout << message << Color::End() << std::endl;
+			std::cout << textColor << message << Color::End() << std::endl;
 		}
 	}
 

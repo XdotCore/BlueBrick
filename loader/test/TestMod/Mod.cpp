@@ -10,25 +10,31 @@ using namespace Lego::GUI;
 
 $ModEntry(TestMod) {
 public:
-	static inline BlueBrick::Logger* TestModLogger;
+	static inline std::shared_ptr<BlueBrick::Logger> Logger;
 
-	Info GetInfo() override {
-		return { "TestMod", "1.0.0", "X.Core" };
+	ModInfo& GetInfo() override {
+		static Color nameColor = Color(0x9932CC);
+		static ModInfo info = ModInfo("TestMod", nameColor, "1.0.0", "X.Core", Color::DarkOrange());
+		return info;
 	}
 
 	void OnInitialized() override {
-		Logger->Message("Hello from test mod {1}😘💩{0} hello again {2} oog", Color::End(), Color::AliceBlue(), Color::DarkSalmon());
-		TestModLogger = Logger;
+		Logger = Mod::Logger;
+
+		Logger->Message("Hello from test mod {1}😘💩{0} hello again {2} oog", Color::End(), Color::Aqua(), Color::DarkSalmon());
+		Logger->Message(Severity::Debug, "Debug: debug");
+		Logger->Message(Severity::Warning, "Warning: warning");
+		Logger->Message(Severity::Error, "Error: error");
 
 		ClassManager<MainMenuScreen>::AttachPrefix(&MainMenuScreen::Update, a);
 		ClassManager<MainMenuScreen>::AttachPostfix(&MainMenuScreen::Update, b);
 	}
 
 	static void a(MainMenuScreen* _this, GUI2Page* page, PageState state, void** m) {
-		TestModLogger->Message("Hello world! {}", (int)state);
+		TestMod::Logger->Message("Hello world! {}", (int)state);
 	}
 
 	static void b(MainMenuScreen* _this, GUI2Page* page, PageState state, void** m) {
-		TestModLogger->Message("Goodbye world! {}", (int)state);
+		TestMod::Logger->Message("Goodbye world! {}", (int)state);
 	}
 };
