@@ -12,13 +12,18 @@ using CallConv = BlueBrick::CallConv;
 extern BlueBrick::Logger MainLogger;
 
 void ClassManager::Init() {
-	HookHelpers::HookFunction<class v0_f0>(&MainMenuScreen::GUI2PageHandler_dtor,   "MainMenuScreen::GUI2PageHandler_dtor");
-	HookHelpers::HookFunction<class v0_f1>(&MainMenuScreen::Update,                 "MainMenuScreen::Update");
+	// vftable0 inherited from FlowPageHandler2
+	HookHelpers::HookFunction<class v0_f0, FlowPageHandler2>(&MainMenuScreen::GUI2PageHandler_dtor, "MainMenuScreen::GUI2PageHandler_dtor");
+	HookHelpers::HookFunction<class v0_f1, FlowPageHandler2>(&MainMenuScreen::Update,               "MainMenuScreen::Update");
+
+	// vftable0 new functions
 	HookHelpers::HookFunction<class v0_f2>(&MainMenuScreen::GetGui2Manager_int_0xc, "MainMenuScreen::GetGui2Manager_int_0xc");
 	HookHelpers::HookFunction<class v0_f3>(&MainMenuScreen::Return2,                "MainMenuScreen::Return2");
 	HookHelpers::HookFunction<class v0_f4>(&MainMenuScreen::SetGUI2Manager_int_0xc, "MainMenuScreen::SetGUI2Manager_int_0xc");
-	HookHelpers::HookFunction<class v1_f0>(&MainMenuScreen::IEventListener_dtor,    "MainMenuScreen::IEventListener_dtor");
-	HookHelpers::HookFunction<class v1_f1>(&MainMenuScreen::RecieveEvent,           "MainMenuScreen::RecieveEvent");
+
+	// vftable1 inherited from IEventListener
+	HookHelpers::HookFunction<class v1_f0, IEventListener>(&MainMenuScreen::IEventListener_dtor, "MainMenuScreen::IEventListener_dtor");
+	HookHelpers::HookFunction<class v1_f1, IEventListener>(&MainMenuScreen::RecieveEvent,        "MainMenuScreen::RecieveEvent");
 }
 
 namespace Lego::GUI {
@@ -74,8 +79,8 @@ namespace Lego::GUI {
 		return funcData;
 	}
 
-	void MainMenuScreen::RecieveEvent(Event* event, int a) {
-		ClassManager::CallFunc(&MainMenuScreen::RecieveEvent, this, event, a);
+	void MainMenuScreen::RecieveEvent(Event* event, NuEventData* data) {
+		ClassManager::CallFunc(&MainMenuScreen::RecieveEvent, this, event, data);
 	}
 	FuncData& MainMenuScreen::RecieveEvent_data() {
 		static FuncData funcData(vftable_for_IEventListener, 1, CallConv::Thiscall);

@@ -6,7 +6,7 @@ namespace Lego::Events {
 
 	}
 
-	void IEventListener::RecieveEvent(Event* event, int a) {
+	void IEventListener::RecieveEvent(Event* event, NuEventData * data) {
 
 	}
 

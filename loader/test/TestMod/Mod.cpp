@@ -4,9 +4,11 @@
 #include "Logger/Color/ConsoleColor.hpp"
 #include "Logger/Color/Color256.hpp"
 #include <iostream>
+#include <windows.h>
 
 using namespace BlueBrick;
 using namespace Lego::GUI;
+using namespace Lego::Events;
 
 $ModEntry(TestMod) {
 public:
@@ -26,20 +28,11 @@ public:
 		Logger->Message(Severity::Warning, "Warning: warning");
 		Logger->Message(Severity::Error, "Error: error");
 
-		try {
-			ClassManager<MainMenuScreen>::AttachPrefix(&MainMenuScreen::Update, a);
-			ClassManager<MainMenuScreen>::AttachPostfix(&MainMenuScreen::Update, b);
-		}
-		catch (std::exception e) {
-			Logger->Message(e.what());
-		}
+		ClassManager<MainMenuScreen>::AttachPrefix(&MainMenuScreen::RecieveEvent, c);
 	}
 
-	static void a(MainMenuScreen* _this, GUI2Page* page, PageState state, void** m) {
-		Logger->Message("Hello world! {}", (int)state);
-	}
-
-	static void b(MainMenuScreen* _this, GUI2Page* page, PageState state, void** m) {
-		Logger->Message("Goodbye world! {}", (int)state);
+	static void c(MainMenuScreen* _this, Event* event, NuEventData* data) {
+		int base = (int)(GetModuleHandle(NULL)) - 0x400000;
+		Logger->Message("{:x}, {:x}, {:x}", (int)*(void**)_this - base, (int)event - base, (int)*(void**)data - base);
 	}
 };

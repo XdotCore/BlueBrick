@@ -1,10 +1,10 @@
 #pragma once
 
 #include "Export.hpp"
+#include "../FlowPageHandler2.hpp"
+#include "../../GUI2Page.hpp"
+#include "../../GUI2MenuEntry.hpp"
 #include "Events/IEventListener.hpp"
-#include "GUI/Flow/FlowPageHandler2.hpp"
-#include "GUI/GUI2Page.hpp"
-#include "GUI/GUI2MenuEntry.hpp"
 #include "Hooking/ClassManager.hpp"
 #include "Types.hpp"
 
@@ -38,7 +38,7 @@ namespace Lego::GUI {
 		GUI2MenuEntry* quitToWindowsMenuEntry;
 		GUI2MenuEntry* languageMenuEntry;
 		GUI2MenuEntry* helpMenuEntry;
-		uint enabledMenuEntries;
+		GUI2MenuEntry* selectedMenuEntry;
 		short short_0x6c;
 		GUI2MenuEntryTextOverride menuEntryTextOverrides[12];
 		bool bool_0xd0;
@@ -52,15 +52,18 @@ namespace Lego::GUI {
 		int int_0xf0;
 		int int_0xf4;
 
+		// vftable0 inherited from FlowPageHandler2
 		void GUI2PageHandler_dtor() override;
 		void Update(GUI2Page* page, PageState state, void** managerProcessData) override;
 
+		// vftable0 new functions
 		virtual int GetGui2Manager_int_0xc();
 		virtual int Return2();
 		virtual void SetGUI2Manager_int_0xc(int val);
 
+		// vftable1 inherited from IEventListener
 		void IEventListener_dtor() override;
-		void RecieveEvent(Events::Event* event, int a) override;
+		void RecieveEvent(Events::Event* event, Events::NuEventData* data) override;
 
 		friend BlueBrick::ClassManager<MainMenuScreen>;
 	};

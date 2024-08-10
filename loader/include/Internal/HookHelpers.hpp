@@ -10,26 +10,31 @@ extern BlueBrick::Logger MainLogger;
 
 namespace BlueBrick::HookHelpers {
 
-	template<class Tag, class Class, typename Ret, typename... Args>
+	// For multiple inheritance
+	template<class Tag, class Base, class Class, typename Ret, typename... Args>
 	void HookFunction(Ret(Class::* func)(Args...), const std::string& name) {
 		FuncData& funcData = ClassManager<Class>::GetFuncData(func);
 
-		auto hook = [funcData, name](auto original, Class* _this, Args... args) -> Ret {
+		auto hook = [funcData, name](auto original, Base* _base, Args... args) -> Ret {
 			using PrefixCallType = Ret(*)(Class*, Args...);
 			using PostfixCallType = Ret(*)(Class*, Args...);
+
+			Class* _this = static_cast<Class*>(_base);
+
+			MainLogger.Message(Severity::Debug, "Calling hooked function: {}", name);
 
 			for (void* prefix : funcData.GetPrefixes()) {
 				((PrefixCallType)prefix)(_this, std::forward<Args>(args)...);
 			}
 
 			if constexpr (std::is_same_v<Ret, void>) {
-				original(_this, std::forward<Args>(args)...);
+				original(_base, std::forward<Args>(args)...);
 
 				for (void* postfix : funcData.GetPostfixes())
 					((PostfixCallType)postfix)(_this, std::forward<Args>(args)...);
 			}
 			else {
-				Ret result = original(_this, std::forward<Args>(args)...);
+				Ret result = original(_base, std::forward<Args>(args)...);
 
 				for (void* postfix : funcData.GetPostfixes())
 					result = ((PostfixCallType)postfix)(_this, std::forward<Args>(args)...);
@@ -41,41 +46,47 @@ namespace BlueBrick::HookHelpers {
 		if (funcData.IsVirtual()) {
 			switch (funcData.CallConv()) {
 				case CallConv::Cdecl:
-					rcmp::hook_indirect_function<Tag, rcmp::cdecl_t<Ret(Class*, Args...)>>(funcData.GetVftableAtIndex(), hook);
+					rcmp::hook_indirect_function<Tag, rcmp::cdecl_t<Ret(Base*, Args...)>>(funcData.GetVftableAtIndex(), hook);
 					break;
 				case CallConv::Stdcall:
-					rcmp::hook_indirect_function<Tag, rcmp::stdcall_t<Ret(Class*, Args...)>>(funcData.GetVftableAtIndex(), hook);
+					rcmp::hook_indirect_function<Tag, rcmp::stdcall_t<Ret(Base*, Args...)>>(funcData.GetVftableAtIndex(), hook);
 					break;
 				case CallConv::Fastcall:
-					rcmp::hook_indirect_function<Tag, rcmp::fastcall_t<Ret(Class*, Args...)>>(funcData.GetVftableAtIndex(), hook);
+					rcmp::hook_indirect_function<Tag, rcmp::fastcall_t<Ret(Base*, Args...)>>(funcData.GetVftableAtIndex(), hook);
 					break;
 				case CallConv::Thiscall:
-					rcmp::hook_indirect_function<Tag, rcmp::thiscall_t<Ret(Class*, Args...)>>(funcData.GetVftableAtIndex(), hook);
+					rcmp::hook_indirect_function<Tag, rcmp::thiscall_t<Ret(Base*, Args...)>>(funcData.GetVftableAtIndex(), hook);
 					break;
 				default:
-					rcmp::hook_indirect_function<Tag, Ret(Class*, Args...)>(funcData.GetVftableAtIndex(), hook);
+					rcmp::hook_indirect_function<Tag, Ret(Base*, Args...)>(funcData.GetVftableAtIndex(), hook);
 					break;
 			}
 		}
 		else {
 			switch (funcData.CallConv()) {
 				case CallConv::Cdecl:
-					rcmp::hook_function<Tag, rcmp::cdecl_t<Ret(Class*, Args...)>>(funcData.GetFunc(), hook);
+					rcmp::hook_function<Tag, rcmp::cdecl_t<Ret(Base*, Args...)>>(funcData.GetFunc(), hook);
 					break;
 				case CallConv::Stdcall:
-					rcmp::hook_function<Tag, rcmp::stdcall_t<Ret(Class*, Args...)>>(funcData.GetFunc(), hook);
+					rcmp::hook_function<Tag, rcmp::stdcall_t<Ret(Base*, Args...)>>(funcData.GetFunc(), hook);
 					break;
 				case CallConv::Fastcall:
-					rcmp::hook_function<Tag, rcmp::fastcall_t<Ret(Class*, Args...)>>(funcData.GetFunc(), hook);
+					rcmp::hook_function<Tag, rcmp::fastcall_t<Ret(Base*, Args...)>>(funcData.GetFunc(), hook);
 					break;
 				case CallConv::Thiscall:
-					rcmp::hook_function<Tag, rcmp::thiscall_t<Ret(Class*, Args...)>>(funcData.GetFunc(), hook);
+					rcmp::hook_function<Tag, rcmp::thiscall_t<Ret(Base*, Args...)>>(funcData.GetFunc(), hook);
 					break;
 				default:
-					rcmp::hook_function<Tag, Ret(Class*, Args...)>(funcData.GetFunc(), hook);
+					rcmp::hook_function<Tag, Ret(Base*, Args...)>(funcData.GetFunc(), hook);
 					break;
 			}
 		}
+	}
+
+	// for single/no inheritance
+	template<class Tag, class Class, typename Ret, typename... Args>
+	void HookFunction(Ret(Class::* func)(Args...), const std::string& name) {
+		HookFunction<Tag, Class, Class, Ret, Args...>(func, name);
 	}
 
 }

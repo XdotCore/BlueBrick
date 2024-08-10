@@ -1,7 +1,8 @@
 #pragma once
 
 #include "Export.hpp"
-#include "Events/Event.hpp"
+#include "Event.hpp"
+#include "EventData/NuEventData.hpp"
 
 namespace Lego::Events {
 
@@ -11,7 +12,7 @@ namespace Lego::Events {
 		void* ptr_0x4;
 
 		virtual void IEventListener_dtor();
-		virtual void RecieveEvent(Event* event, int a);
+		virtual void RecieveEvent(Event* event, NuEventData* data);
 		virtual bool vfunction3(void* unk);
 	};
 
