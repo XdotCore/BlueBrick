@@ -1,5 +1,6 @@
 ﻿#include "Mod/Mod.hpp"
 #include "GUI/Flow/Screens/MainMenuScreen.hpp"
+#include "Global.hpp"
 #include "Logger/Color/Color.hpp"
 #include "Logger/Color/ConsoleColor.hpp"
 #include "Logger/Color/Color256.hpp"
@@ -7,6 +8,7 @@
 #include <windows.h>
 
 using namespace BlueBrick;
+using namespace Lego;
 using namespace Lego::GUI;
 using namespace Lego::Events;
 
@@ -31,6 +33,8 @@ public:
 		ClassManager<MainMenuScreen>::AttachPrefix(&MainMenuScreen::Update, a);
 		ClassManager<MainMenuScreen>::AttachPostfix(&MainMenuScreen::Update, b);
 		ClassManager<MainMenuScreen>::AttachPrefix(&MainMenuScreen::RecieveEvent, c);
+
+		ClassManager<Global>::AttachPrefix(Global::RunGame, d);
 	}
 
 	static void a(MainMenuScreen* _this, GUI2Page* page, PageState state, void** m) {
@@ -44,5 +48,12 @@ public:
 	static void c(MainMenuScreen* _this, Event* event, NuEventData* data) {
 		int base = (int)(GetModuleHandle(NULL)) - 0x400000;
 		Logger->Message("{:x}, {:x}, {:x}", (int)*(void**)_this - base, (int)event - base, (int)*(void**)data - base);
+	}
+
+	static int d(int cmdLineArgCount, char** cmdLineArgs) {
+		Logger->Message("{}", cmdLineArgCount);
+		for (int i = 0; i < cmdLineArgCount; i++)
+			Logger->Message("{}: {}", i, cmdLineArgs[i]);
+		return 0;
 	}
 };

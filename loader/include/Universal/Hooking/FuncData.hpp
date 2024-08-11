@@ -38,4 +38,23 @@ namespace BlueBrick {
 		void AddPostfix(PostfixType postfix) { postfixHooks.push_back(postfix); }
 	};
 
+	template<typename Ret, typename... Args>
+	class FuncData<Ret(Args...)> : public FuncDataBase {
+	protected:
+		void* ptr;
+
+		using PrefixType = Ret(*)(Args...);
+		using PostfixType = Ret(*)(Args...);
+
+		std::vector<PrefixType> prefixHooks;
+		std::vector<PostfixType> postfixHooks;
+	public:
+		FuncData(const std::string& name, void* ptr) : FuncDataBase(name), ptr(ptr) { }
+
+		virtual Ret Call(const Args&... args) = 0;
+
+		void AddPrefix(PrefixType prefix) { prefixHooks.push_back(prefix); }
+		void AddPostfix(PostfixType postfix) { postfixHooks.push_back(postfix); }
+	};
+
 }
