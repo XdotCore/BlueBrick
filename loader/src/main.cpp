@@ -8,6 +8,10 @@ using namespace BlueBrick;
 // The logger instance used for main BlueBrick logs
 Logger MainLogger = Logger(nullptr);
 
+static void PrintInfo() {
+	MainLogger.Message("Running BlueBrick v{} in {}", BLUEBRICK_VERSION, GAME_NAME);
+}
+
 static void LoadMods() {
 	const std::filesystem::path modsDir = "BlueBrick/Mods";
 	std::filesystem::create_directories(modsDir);
@@ -43,6 +47,7 @@ BOOL WINAPI DllMain(HINSTANCE dll, DWORD reason, LPVOID _) {
 		case DLL_PROCESS_ATTACH: {
 			MessageBoxA(NULL, "for debugging", "a", MB_OK);
 
+			PrintInfo();
 			LoadMods();
 		} break;
 	}

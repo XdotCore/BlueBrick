@@ -35,6 +35,8 @@ FetchContent_MakeAvailable(rcmp)
 target_link_libraries(${PROJECT_NAME} PUBLIC rcmp)
 
 add_compile_definitions(TARGET_GAME="${TARGET_GAME}")
+add_compile_definitions(GAME_NAME="${GAME_NAME}")
+add_compile_definitions(BLUEBRICK_VERSION="${BLUEBRICK_VERSION}")
 target_include_directories(${PROJECT_NAME} PUBLIC
 	"include/Games/${TARGET_GAME}/"
 	"include/Universal/"

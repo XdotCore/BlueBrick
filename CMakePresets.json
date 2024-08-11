@@ -39,7 +39,8 @@
         "strategy": "external"
       },
       "cacheVariables": {
-        "TARGET_GAME": "MarvelSuperHeroes1"
+        "TARGET_GAME": "MarvelSuperHeroes1",
+        "GAME_NAME": "Lego Marvel Super Heroes"
       }
     },
     {
