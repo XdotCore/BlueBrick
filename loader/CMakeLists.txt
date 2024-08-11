@@ -29,7 +29,7 @@ include(FetchContent)
 FetchContent_Declare(
     rcmp
     GIT_REPOSITORY "https://github.com/Smertig/rcmp.git"
-    GIT_TAG "origin/master"
+    GIT_TAG "v0.2.2"
 )
 FetchContent_MakeAvailable(rcmp)
 target_link_libraries(${PROJECT_NAME} PUBLIC rcmp)
