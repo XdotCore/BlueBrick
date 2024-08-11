@@ -30,7 +30,7 @@ namespace BlueBrick {
 /// <summary>
 /// A default string formatter for colors. Tells the console to start the color
 /// </summary>
-template<class ColorType> requires std::is_convertible_v<ColorType*, BlueBrick::ColorBase*>
+template<class ColorType> requires std::is_base_of_v<BlueBrick::ColorBase, ColorType>
 struct std::formatter<ColorType> {
 	template<typename ParseContext>
 	constexpr ParseContext::iterator parse(ParseContext& ctx) {
