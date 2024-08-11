@@ -28,7 +28,17 @@ public:
 		Logger->Message(Severity::Warning, "Warning: warning");
 		Logger->Message(Severity::Error, "Error: error");
 
+		ClassManager<MainMenuScreen>::AttachPrefix(&MainMenuScreen::Update, a);
+		ClassManager<MainMenuScreen>::AttachPostfix(&MainMenuScreen::Update, b);
 		ClassManager<MainMenuScreen>::AttachPrefix(&MainMenuScreen::RecieveEvent, c);
+	}
+
+	static void a(MainMenuScreen* _this, GUI2Page* page, PageState state, void** m) {
+		Logger->Message("Hello world!");
+	}
+
+	static void b(MainMenuScreen* _this, GUI2Page* page, PageState state, void** m) {
+		Logger->Message("Goodbye world!");
 	}
 
 	static void c(MainMenuScreen* _this, Event* event, NuEventData* data) {

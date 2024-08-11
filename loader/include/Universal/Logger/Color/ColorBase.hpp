@@ -4,7 +4,6 @@
 #include <format>
 #include <string>
 #include <sstream>
-#include <type_traits>
 
 namespace BlueBrick {
 

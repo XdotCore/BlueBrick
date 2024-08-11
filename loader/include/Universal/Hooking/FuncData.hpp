@@ -1,98 +1,41 @@
 #pragma once
 
 #include "Export.hpp"
-#include "CallConv.hpp"
 #include <vector>
+#include <string>
 
 namespace BlueBrick {
 
-	/// <summary>
-	/// Represents the information needed to hook a function
-	/// </summary>
-	struct FuncData final {
-	private:
-		bool isVirtual;
-		CallConv callConv;
+	class FuncDataBase {
+	public:
+		std::string name;
 
-		// non-virtual
-		void* ptr;
+		FuncDataBase(const std::string& name) : name(name) { }
 
-		// virtual
+		virtual void ApplyHook() = 0;
+	};
+
+	template<typename FuncType> requires std::is_function_v<FuncType> || std::is_member_function_pointer_v<FuncType>
+	class FuncData : public FuncDataBase {};
+
+	template<class Class, typename Ret, typename... Args>
+	class FuncData<Ret(Class::*)(Args...)> : public FuncDataBase {
+	protected:
 		void** vftable;
 		unsigned int index;
 
-		// hooks
-		std::vector<void*> prefixHooks;
-		std::vector<void*> postfixHooks;
+		using PrefixType = Ret(*)(Class*, Args...);
+		using PostfixType = Ret(*)(Class*, Args...);
+
+		std::vector<PrefixType> prefixHooks;
+		std::vector<PostfixType> postfixHooks;
 	public:
-		/// <summary>
-		/// Gets whether or not this function comes from a vftable
-		/// </summary>
-		BLUEBRICK_DLL bool IsVirtual() const;
+		FuncData(const std::string& name, void** vftable, int index) : FuncDataBase(name), vftable(vftable), index(index) { }
 
-		/// <summary>
-		/// Gets the calling convention of the function
-		/// </summary>
-		BLUEBRICK_DLL CallConv CallConv() const;
+		virtual Ret Call(Class* _this, const Args&... args) = 0;
 
-		/// <summary>
-		/// Gets the function pointer for a non-virtual function
-		/// </summary>
-		BLUEBRICK_DLL void* Ptr() const;
-
-		/// <summary>
-		/// Instantiates data for a non-virtual function
-		/// </summary>
-		/// <param name="ptr"> The function pointer for a non-virtual function </param>
-		BLUEBRICK_DLL FuncData(void* ptr, BlueBrick::CallConv callConv = BlueBrick::CallConv::None);
-
-		/// <summary>
-		/// Gets the vftable for a virtual function
-		/// </summary>
-		BLUEBRICK_DLL void** Vftable() const;
-
-		/// <summary>
-		/// Gets the index in the vftable for the virtual function
-		/// </summary>
-		BLUEBRICK_DLL unsigned int Index() const;
-
-		/// <summary>
-		/// Instantiates data for a virtual function
-		/// </summary>
-		/// <param name="vftable"> The vftable pointer for a virtual function </param>
-		/// <param name="index"> The index in the vftable for the virtual function </param>
-		BLUEBRICK_DLL FuncData(void** vftable, unsigned int index, BlueBrick::CallConv callConv = BlueBrick::CallConv::None);
-
-		/// <summary>
-		/// Gets the pointer for the function
-		/// </summary>
-		BLUEBRICK_DLL void* GetFunc() const;
-
-		/// <summary>
-		/// Gets the pointer to the vftable at the index
-		/// </summary>
-		/// <returns> The pointer, or nullptr if not virtual </returns>
-		BLUEBRICK_DLL void* GetVftableAtIndex() const;
-
-		/// <summary>
-		/// Adds a prefix hook
-		/// </summary>
-		BLUEBRICK_DLL void AddPrefix(void* prefix);
-
-		/// <summary>
-		/// Gets all the prefixes that have been added
-		/// </summary>
-		BLUEBRICK_DLL const std::vector<void*>& GetPrefixes() const;
-
-		/// <summary>
-		/// Adds a postfix hook
-		/// </summary>
-		BLUEBRICK_DLL void AddPostfix(void* postfix);
-
-		/// <summary>
-		/// Gets all the postfixes that have been added
-		/// </summary>
-		BLUEBRICK_DLL const std::vector<void*>& GetPostfixes() const;
+		void AddPrefix(PrefixType prefix) { prefixHooks.push_back(prefix); }
+		void AddPostfix(PostfixType postfix) { postfixHooks.push_back(postfix); }
 	};
 
 }
