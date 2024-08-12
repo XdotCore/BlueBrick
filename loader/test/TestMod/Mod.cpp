@@ -12,7 +12,7 @@ using namespace Lego;
 using namespace Lego::GUI;
 using namespace Lego::Events;
 
-$ModEntry(TestMod) {
+class TestMod : public Mod {
 public:
 	static inline std::shared_ptr<BlueBrick::Logger> Logger;
 
@@ -56,4 +56,4 @@ public:
 			Logger->Message("{}: {}", i, cmdLineArgs[i]);
 		return 0;
 	}
-};
+} testMod;
