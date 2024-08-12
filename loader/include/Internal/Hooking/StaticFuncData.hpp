@@ -10,19 +10,19 @@ extern BlueBrick::Logger MainLogger;
 namespace BlueBrick {
 
 #if RCMP_GET_ARCH() == RCMP_ARCH_X86
-	template<const char* Name, rcmp::cconv callconv, typename FuncType> requires std::is_function_v<FuncType>
+	template<intptr_t ptr, rcmp::cconv callconv, typename FuncType> requires std::is_function_v<FuncType>
 	class StaticFuncData : FuncData<FuncType> {};
 
-	template<const char* Name, rcmp::cconv callconv, typename Ret, typename... Args>
-	class StaticFuncData<Name, callconv, Ret(Args...)> : public FuncData<Ret(Args...)> {
+	template<intptr_t ptr, rcmp::cconv callconv, typename Ret, typename... Args>
+	class StaticFuncData<ptr, callconv, Ret(Args...)> : public FuncData<Ret(Args...)> {
 	public:
 		using RcmpType = rcmp::generic_signature_t<Ret(Args...), callconv>;
 #else
-	template<const char* Name, typename FuncType> requires std::is_function_v<FuncType>
+	template<intptr_t ptr, typename FuncType> requires std::is_function_v<FuncType>
 	class StaticFuncData : FuncData<FuncType> {};
 
-	template<const char* Name, typename Ret, typename... Args>
-	class StaticFuncData<Name, Ret(Args...)> : public FuncData<Ret(Args...)> {
+	template<intptr_t ptr, typename Ret, typename... Args>
+	class StaticFuncData<ptr, Ret(Args...)> : public FuncData<Ret(Args...)> {
 	public:
 		using RcmpType = rcmp::generic_signature_t<Ret(Args...), rcmp::cconv::native_x64>;
 #endif
@@ -33,11 +33,11 @@ namespace BlueBrick {
 		using PrefixType = base::PrefixType;
 		using PostfixType = base::PostfixType;
 
-		StaticFuncData(void* ptr) : base(Name, ptr) {}
+		StaticFuncData(const std::string& name) : base(name) {}
 
 		void* GetPtr() {
 			intptr_t base = (intptr_t)GetModuleHandle(NULL);
-			return (void*)((intptr_t)this->ptr + base);
+			return (void*)(ptr + base);
 		}
 
 		Ret Call(const Args&... args) override {

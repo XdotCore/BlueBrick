@@ -10,24 +10,14 @@ extern BlueBrick::Logger MainLogger;
 
 namespace Lego::GUI {
 
-	static void** const vftable_for_FlowPageHandler2 = (void**)0xDD5948;
-	static void** const vftable_for_IEventListener = (void**)0xDD5938;
-
-	const char GUI2PageHandler_dtor_name[] = "MainMenuScreen::GUI2PageHandler_dtor_name";
-	const char Update_name[] = "MainMenuScreen::Update";
-
-	const char GetGUI2PageHandler_int_0xc_name[] = "MainMenuScreen::GetGUI2PageHandler_int_0xc";
-	const char Return2_name[] = "MainMenuScreen::Return2";
-	const char SetGUI2PageHandler_int_0xc_name[] = "MainMenuScreen::SetGUI2PageHandler_int_0xc";
-
-	const char IEventListener_dtor_name[] = "MainMenuScreen::IEventListener_dtor";
-	const char RecieveEvent_name[] = "MainMenuScreen::RecieveEvent";
+	constexpr intptr_t vftable_for_FlowPageHandler2 = 0xDD5948;
+	constexpr intptr_t vftable_for_IEventListener = 0xDD5938;
 
 	void MainMenuScreen::GUI2PageHandler_dtor() {
 		GUI2PageHandler_dtor_data().Call(this);
 	}
 	FuncData<decltype(&MainMenuScreen::GUI2PageHandler_dtor)>& MainMenuScreen::GUI2PageHandler_dtor_data() {
-		static MemberFuncData<GUI2PageHandler_dtor_name, rcmp::cconv::thiscall_, decltype(&MainMenuScreen::GUI2PageHandler_dtor), GUI2PageHandler> funcData(vftable_for_FlowPageHandler2, 0);
+		static MemberFuncData<vftable_for_FlowPageHandler2, 0, rcmp::cconv::thiscall_, decltype(&GUI2PageHandler_dtor), GUI2PageHandler> funcData("MainMenuScreen::GUI2PageHandler_dtor");
 		return funcData;
 	}
 
@@ -35,7 +25,7 @@ namespace Lego::GUI {
 		Update_data().Call(this, page, state, managerProcessData);
 	}
 	FuncData<decltype(&MainMenuScreen::Update)>& MainMenuScreen::Update_data() {
-		static MemberFuncData<Update_name, rcmp::cconv::thiscall_, decltype(&MainMenuScreen::Update), MainMenuScreen> funcData(vftable_for_FlowPageHandler2, 1);
+		static MemberFuncData<vftable_for_FlowPageHandler2, 1, rcmp::cconv::thiscall_, decltype(&Update), MainMenuScreen> funcData("MainMenuScreen::Update");
 		return funcData;
 	}
 
@@ -43,7 +33,7 @@ namespace Lego::GUI {
 		return GetGUI2PageHandler_int_0xc_data().Call(this);
 	}
 	FuncData<decltype(&MainMenuScreen::GetGUI2PageHandler_int_0xc)>& MainMenuScreen::GetGUI2PageHandler_int_0xc_data() {
-		static MemberFuncData<GetGUI2PageHandler_int_0xc_name, rcmp::cconv::thiscall_, decltype(&MainMenuScreen::GetGUI2PageHandler_int_0xc), MainMenuScreen> funcData(vftable_for_FlowPageHandler2, 2);
+		static MemberFuncData<vftable_for_FlowPageHandler2, 2, rcmp::cconv::thiscall_, decltype(&GetGUI2PageHandler_int_0xc), MainMenuScreen> funcData("MainMenuScreen::GetGUI2PageHandler_int_0xc");
 		return funcData;
 	}
 
@@ -51,7 +41,7 @@ namespace Lego::GUI {
 		return Return2_data().Call(this);
 	}
 	FuncData<decltype(&MainMenuScreen::Return2)>& MainMenuScreen::Return2_data() {
-		static MemberFuncData<Return2_name, rcmp::cconv::stdcall_, decltype(&MainMenuScreen::Return2), MainMenuScreen> funcData(vftable_for_FlowPageHandler2, 3);
+		static MemberFuncData<vftable_for_FlowPageHandler2, 3, rcmp::cconv::stdcall_, decltype(&Return2), MainMenuScreen> funcData("MainMenuScreen::Return2");
 		return funcData;
 	}
 
@@ -59,7 +49,7 @@ namespace Lego::GUI {
 		SetGUI2PageHandler_int_0xc_data().Call(this, val);
 	}
 	FuncData<decltype(&MainMenuScreen::SetGUI2PageHandler_int_0xc)>& MainMenuScreen::SetGUI2PageHandler_int_0xc_data() {
-		static MemberFuncData<SetGUI2PageHandler_int_0xc_name, rcmp::cconv::thiscall_, decltype(&MainMenuScreen::SetGUI2PageHandler_int_0xc), MainMenuScreen> funcData(vftable_for_FlowPageHandler2, 4);
+		static MemberFuncData<vftable_for_FlowPageHandler2, 4, rcmp::cconv::thiscall_, decltype(&SetGUI2PageHandler_int_0xc), MainMenuScreen> funcData("MainMenuScreen::SetGUI2PageHandler_int_0xc");
 		return funcData;
 	}
 
@@ -67,7 +57,7 @@ namespace Lego::GUI {
 		IEventListener_dtor_data().Call(this);
 	}
 	FuncData<decltype(&MainMenuScreen::IEventListener_dtor)>& MainMenuScreen::IEventListener_dtor_data() {
-		static MemberFuncData<IEventListener_dtor_name, rcmp::cconv::thiscall_, decltype(&MainMenuScreen::IEventListener_dtor), IEventListener> funcData(vftable_for_IEventListener, 0);
+		static MemberFuncData<vftable_for_IEventListener, 0, rcmp::cconv::thiscall_, decltype(&IEventListener_dtor), IEventListener> funcData("MainMenuScreen::IEventListener_dtor");
 		return funcData;
 	}
 
@@ -75,7 +65,7 @@ namespace Lego::GUI {
 		RecieveEvent_data().Call(this, event, data);
 	}
 	FuncData<decltype(&MainMenuScreen::RecieveEvent)>& MainMenuScreen::RecieveEvent_data() {
-		static MemberFuncData<RecieveEvent_name, rcmp::cconv::thiscall_, decltype(&MainMenuScreen::RecieveEvent), IEventListener> funcData(vftable_for_IEventListener, 1);
+		static MemberFuncData<vftable_for_IEventListener, 1, rcmp::cconv::thiscall_, decltype(&RecieveEvent), IEventListener> funcData("MainMenuScreen::RecieveEvent");
 		return funcData;
 	}
 

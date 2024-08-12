@@ -21,16 +21,13 @@ namespace BlueBrick {
 	template<class Class, typename Ret, typename... Args>
 	class FuncData<Ret(Class::*)(Args...)> : public FuncDataBase {
 	protected:
-		void** vftable;
-		unsigned int index;
-
 		using PrefixType = Ret(*)(Class*, Args...);
 		using PostfixType = Ret(*)(Class*, Args...);
 
 		std::vector<PrefixType> prefixHooks;
 		std::vector<PostfixType> postfixHooks;
 	public:
-		FuncData(const std::string& name, void** vftable, int index) : FuncDataBase(name), vftable(vftable), index(index) { }
+		FuncData(const std::string& name) : FuncDataBase(name) { }
 
 		virtual Ret Call(Class* _this, const Args&... args) = 0;
 
@@ -41,15 +38,13 @@ namespace BlueBrick {
 	template<typename Ret, typename... Args>
 	class FuncData<Ret(Args...)> : public FuncDataBase {
 	protected:
-		void* ptr;
-
 		using PrefixType = Ret(*)(Args...);
 		using PostfixType = Ret(*)(Args...);
 
 		std::vector<PrefixType> prefixHooks;
 		std::vector<PostfixType> postfixHooks;
 	public:
-		FuncData(const std::string& name, void* ptr) : FuncDataBase(name), ptr(ptr) { }
+		FuncData(const std::string& name) : FuncDataBase(name) { }
 
 		virtual Ret Call(const Args&... args) = 0;
 

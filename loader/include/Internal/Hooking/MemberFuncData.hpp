@@ -10,19 +10,19 @@ extern BlueBrick::Logger MainLogger;
 namespace BlueBrick {
 
 #if RCMP_GET_ARCH() == RCMP_ARCH_X86
-	template<const char* Name, rcmp::cconv callconv, typename FuncType, class Base> requires std::is_member_function_pointer_v<FuncType>
+	template<intptr_t vftable, int index, rcmp::cconv callconv, typename FuncType, class Base> requires std::is_member_function_pointer_v<FuncType>
 	class MemberFuncData : FuncData<FuncType> {};
 
-	template<const char* Name, rcmp::cconv callconv, class Base, class Class, typename Ret, typename... Args> requires std::is_base_of_v<Base, Class>
-	class MemberFuncData<Name, callconv, Ret(Class::*)(Args...), Base> : public FuncData<Ret(Class::*)(Args...)> {
+	template<intptr_t vftable, int index, rcmp::cconv callconv, class Base, class Class, typename Ret, typename... Args> requires std::is_base_of_v<Base, Class>
+	class MemberFuncData<vftable, index, callconv, Ret(Class::*)(Args...), Base> : public FuncData<Ret(Class::*)(Args...)> {
 	public:
 		using RcmpType = rcmp::generic_signature_t<Ret(Base*, Args...), callconv>;
 #else
-	template<const char* Name, typename FuncType, class Base> requires std::is_member_function_pointer_v<FuncType>
+	template<intptr_t vftable, int index, typename FuncType, class Base> requires std::is_member_function_pointer_v<FuncType>
 	class MemberFuncData : FuncData<FuncType> {};
 
-	template<const char* Name, class Base, class Class, typename Ret, typename... Args> requires std::is_base_of_v<Base, Class>
-	class MemberFuncData<Name, Ret(Class::*)(Args...), Base> : public FuncData<Ret(Class::*)(Args...)> {
+	template<intptr_t vftable, int index, class Base, class Class, typename Ret, typename... Args> requires std::is_base_of_v<Base, Class>
+	class MemberFuncData<vftable, index, Ret(Class::*)(Args...), Base> : public FuncData<Ret(Class::*)(Args...)> {
 	public:
 		using RcmpType = rcmp::generic_signature_t<Ret(Base*, Args...), rcmp::cconv::native_x64>;
 #endif
@@ -33,16 +33,16 @@ namespace BlueBrick {
 		using PrefixType = base::PrefixType;
 		using PostfixType = base::PostfixType;
 
-		MemberFuncData(void** vftable, int index) : base(Name, vftable, index) {}
+		MemberFuncData(const std::string& name) : base(name) {}
 
 		void* GetPtr() {
 			intptr_t base = (intptr_t)GetModuleHandle(NULL);
-			return ((void**)((intptr_t)this->vftable + base))[this->index];
+			return ((void**)(vftable + base))[index];
 		}
 
 		void* GetVftableAtIndex() {
 			intptr_t base = (intptr_t)GetModuleHandle(NULL);
-			return (void*)((intptr_t)this->vftable + base + sizeof(void*) * this->index);
+			return (void*)(vftable + base + sizeof(void*) * index);
 		}
 
 		Ret Call(Class* _this, const Args&... args) override {
@@ -81,7 +81,5 @@ namespace BlueBrick {
 			});
 		}
 	};
-
-
 
 }

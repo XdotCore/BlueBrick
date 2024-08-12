@@ -55,15 +55,15 @@ namespace Lego::GUI {
 		void RecieveEvent(Events::Event* event, Events::NuEventData* data) override;
 
 	private:
-		static BlueBrick::FuncData<decltype(&MainMenuScreen::GUI2PageHandler_dtor)>& GUI2PageHandler_dtor_data();
-		static BlueBrick::FuncData<decltype(&MainMenuScreen::Update)>& Update_data();
+		static BlueBrick::FuncData<decltype(&GUI2PageHandler_dtor)>& GUI2PageHandler_dtor_data();
+		static BlueBrick::FuncData<decltype(&Update)>& Update_data();
 
-		static BlueBrick::FuncData<decltype(&MainMenuScreen::GetGUI2PageHandler_int_0xc)>& GetGUI2PageHandler_int_0xc_data();
-		static BlueBrick::FuncData<decltype(&MainMenuScreen::Return2)>& Return2_data();
-		static BlueBrick::FuncData<decltype(&MainMenuScreen::SetGUI2PageHandler_int_0xc)>& SetGUI2PageHandler_int_0xc_data();
+		static BlueBrick::FuncData<decltype(&GetGUI2PageHandler_int_0xc)>& GetGUI2PageHandler_int_0xc_data();
+		static BlueBrick::FuncData<decltype(&Return2)>& Return2_data();
+		static BlueBrick::FuncData<decltype(&SetGUI2PageHandler_int_0xc)>& SetGUI2PageHandler_int_0xc_data();
 
-		static BlueBrick::FuncData<decltype(&MainMenuScreen::IEventListener_dtor)>& IEventListener_dtor_data();
-		static BlueBrick::FuncData<decltype(&MainMenuScreen::RecieveEvent)>& RecieveEvent_data();
+		static BlueBrick::FuncData<decltype(&IEventListener_dtor)>& IEventListener_dtor_data();
+		static BlueBrick::FuncData<decltype(&RecieveEvent)>& RecieveEvent_data();
 
 		friend BlueBrick::ClassManager<MainMenuScreen>;
 	};
