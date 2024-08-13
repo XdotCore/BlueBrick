@@ -3,7 +3,10 @@
 #include "Mod/Mod.hpp"
 #include <windows.h>
 #include <iostream>
+#include <fstream>
+#include <sstream>
 #include <chrono>
+#include <regex>
 
 // The logger instance used for main BlueBrick logs
 extern BlueBrick::Logger MainLogger;
@@ -28,7 +31,7 @@ namespace BlueBrick {
 		canUseColor = true;
 	}
 
-	static bool InitLogger() {
+	static bool InitConsole() {
 		static HANDLE outputHandle = nullptr;
 
 		if (outputHandle)
@@ -76,7 +79,7 @@ namespace BlueBrick {
 	}
 
 	bool Logger::CanUseColor() {
-		InitLogger();
+		InitConsole();
 		return canUseColor;
 	}
 
@@ -85,52 +88,65 @@ namespace BlueBrick {
 	}
 
 	void Logger::Message(Severity severity, const std::string& message) {
-		if (InitLogger()) {
-			bool isMain = this == &MainLogger;
+		std::stringstream string;
 
-			// colors
-			std::string timeColor;
-			std::string typeColor;
-			std::string textColor;
-			std::string nameColor = isMain ? Color::DeepSkyBlue().Start() : mod->GetInfo().StartNameColor();
+		bool isMain = this == &MainLogger;
 
-			switch (severity) {
-				case Severity::Debug: {
-				// the web color "gray" is darker than "dark gray" ...
-					timeColor = Color::Gray().Start();
-					typeColor = textColor = Color::DarkGray().Start();
-				} break;
-				case Severity::Warning: {
-					timeColor = Color::Goldenrod().Start();
-					typeColor = textColor = Color::Yellow().Start();
-				} break;
-				case Severity::Error: {
-					timeColor = Color::Firebrick().Start();
-					typeColor = textColor = Color::Red().Start();
-				} break;
-				default: {
-					timeColor = Color::Gray().Start();
-					typeColor = textColor = Color::End();
-				} break;
-			}
+		// colors
+		std::string timeColor;
+		std::string typeColor;
+		std::string textColor;
+		std::string nameColor = isMain ? Color::DeepSkyBlue().Start() : mod->GetInfo().StartNameColor();
 
-			// time
-			auto now = std::chrono::system_clock::now();
-			auto nowLocal = std::chrono::current_zone()->to_local(now);
-			std::string timeText = std::format("{:%H:%M:%OS} ", nowLocal);
-			std::cout << timeColor << timeText << Color::End();
-
-			// message type
-			std::string typeText = isMain ? "Loader" : "Mod";
-			std::cout << "[" << typeColor << typeText << Color::End() << "] ";
-
-			// mod name
-			std::string nameText = isMain ? "BlueBrick" : mod->GetInfo().Name;
-			std::cout << "[" << nameColor << nameText << Color::End() << "]: ";
-
-			// message
-			std::cout << textColor << message << Color::End() << std::endl;
+		switch (severity) {
+			case Severity::Debug: {
+			// the web color "gray" is darker than "dark gray" ...
+				timeColor = Color::Gray().Start();
+				typeColor = textColor = Color::DarkGray().Start();
+			} break;
+			case Severity::Warning: {
+				timeColor = Color::Goldenrod().Start();
+				typeColor = textColor = Color::Yellow().Start();
+			} break;
+			case Severity::Error: {
+				timeColor = Color::Firebrick().Start();
+				typeColor = textColor = Color::Red().Start();
+			} break;
+			default: {
+				timeColor = Color::Gray().Start();
+				typeColor = textColor = Color::End();
+			} break;
 		}
+
+		// time
+		auto now = std::chrono::system_clock::now();
+		auto nowLocal = std::chrono::current_zone()->to_local(now);
+		std::string timeText = std::format("{:%H:%M:%OS} ", nowLocal);
+		string << timeColor << timeText << Color::End();
+
+		// message type
+		std::string typeText = isMain ? "Loader" : "Mod";
+		string << "[" << typeColor << typeText << Color::End() << "] ";
+
+		// mod name
+		std::string nameText = isMain ? "BlueBrick" : mod->GetInfo().Name;
+		string << "[" << nameColor << nameText << Color::End() << "]: ";
+
+		// message
+		string << textColor << message << Color::End() << std::endl;
+
+		std::string msg = string.str();
+
+		// output to console
+		if (InitConsole())
+			std::cout << msg;
+
+		// output to log
+		static std::ofstream file("BlueBrick/log.txt", std::ofstream::trunc);
+		static std::regex escapes("\x1b.*?m");
+		msg = std::regex_replace(msg, escapes, "");
+		file << msg;
+		file.flush();
 	}
 
 }
