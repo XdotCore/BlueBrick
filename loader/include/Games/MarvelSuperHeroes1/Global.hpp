@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Export.hpp"
-#include "Hooking/ClassManager.hpp"
+#include "Hooking/HookManager.hpp"
 
 namespace Lego {
 
@@ -12,13 +12,13 @@ namespace Lego {
 	private:
 		static BlueBrick::FuncData<decltype(RunGame)>& RunGame_data();
 
-		friend BlueBrick::ClassManager;
+		friend BlueBrick::HookManager;
 	};
 
 }
 
 template<>
-BlueBrick::FuncDataBase& BlueBrick::ClassManager::GetFuncData<Lego::Global>(int(*func)(int, char**)) {
+BlueBrick::FuncDataBase& BlueBrick::HookManager::GetFuncData<Lego::Global>(int(*func)(int, char**)) {
 	using namespace Lego;
 
 	if (func == Global::RunGame)

@@ -5,7 +5,7 @@
 #include "../../GUI2Page.hpp"
 #include "../../GUI2MenuEntry.hpp"
 #include "Events/IEventListener.hpp"
-#include "Hooking/ClassManager.hpp"
+#include "Hooking/HookManager.hpp"
 #include "Types.hpp"
 
 namespace Lego::GUI {
@@ -65,7 +65,7 @@ namespace Lego::GUI {
 		static BlueBrick::FuncData<decltype(&IEventListener_dtor)>& IEventListener_dtor_data();
 		static BlueBrick::FuncData<decltype(&RecieveEvent)>& RecieveEvent_data();
 
-		friend BlueBrick::ClassManager;
+		friend BlueBrick::HookManager;
 	};
 
 }
@@ -73,7 +73,7 @@ namespace Lego::GUI {
 // these can't be defined in the cpp file because the location of a member function pointer is different based on which assembly it is obtained in
 
 template<>
-BlueBrick::FuncDataBase& BlueBrick::ClassManager::GetFuncData(void(Lego::GUI::MainMenuScreen::* func)()) {
+BlueBrick::FuncDataBase& BlueBrick::HookManager::GetFuncData(void(Lego::GUI::MainMenuScreen::* func)()) {
 	using namespace Lego::GUI;
 
 	if (func == &MainMenuScreen::GUI2PageHandler_dtor)
@@ -85,7 +85,7 @@ BlueBrick::FuncDataBase& BlueBrick::ClassManager::GetFuncData(void(Lego::GUI::Ma
 }
 
 template<>
-BlueBrick::FuncDataBase& BlueBrick::ClassManager::GetFuncData(void(Lego::GUI::MainMenuScreen::* func)(Lego::GUI::GUI2Page*, Lego::GUI::PageState, void**)) {
+BlueBrick::FuncDataBase& BlueBrick::HookManager::GetFuncData(void(Lego::GUI::MainMenuScreen::* func)(Lego::GUI::GUI2Page*, Lego::GUI::PageState, void**)) {
 	using namespace Lego::GUI;
 
 	if (func == &MainMenuScreen::Update)
@@ -95,7 +95,7 @@ BlueBrick::FuncDataBase& BlueBrick::ClassManager::GetFuncData(void(Lego::GUI::Ma
 }
 
 template<>
-BlueBrick::FuncDataBase& BlueBrick::ClassManager::GetFuncData(int(Lego::GUI::MainMenuScreen::* func)()) {
+BlueBrick::FuncDataBase& BlueBrick::HookManager::GetFuncData(int(Lego::GUI::MainMenuScreen::* func)()) {
 	using namespace Lego::GUI;
 
 	if (func == &MainMenuScreen::GetGUI2PageHandler_int_0xc)
@@ -107,7 +107,7 @@ BlueBrick::FuncDataBase& BlueBrick::ClassManager::GetFuncData(int(Lego::GUI::Mai
 }
 
 template<>
-BlueBrick::FuncDataBase& BlueBrick::ClassManager::GetFuncData(void(Lego::GUI::MainMenuScreen::* func)(int)) {
+BlueBrick::FuncDataBase& BlueBrick::HookManager::GetFuncData(void(Lego::GUI::MainMenuScreen::* func)(int)) {
 	using namespace Lego::GUI;
 
 	if (func == &MainMenuScreen::SetGUI2PageHandler_int_0xc)
@@ -117,7 +117,7 @@ BlueBrick::FuncDataBase& BlueBrick::ClassManager::GetFuncData(void(Lego::GUI::Ma
 }
 
 template<>
-BlueBrick::FuncDataBase& BlueBrick::ClassManager::GetFuncData(void(Lego::GUI::MainMenuScreen::* func)(Lego::Events::Event*, Lego::Events::NuEventData*)) {
+BlueBrick::FuncDataBase& BlueBrick::HookManager::GetFuncData(void(Lego::GUI::MainMenuScreen::* func)(Lego::Events::Event*, Lego::Events::NuEventData*)) {
 	using namespace Lego::GUI;
 
 	if (func == &MainMenuScreen::RecieveEvent)

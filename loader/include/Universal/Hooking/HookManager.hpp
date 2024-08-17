@@ -11,15 +11,15 @@ namespace BlueBrick {
 	/// <summary>
 	/// A static class that manages the hooking of classes
 	/// </summary>
-	class ClassManager final {
+	class HookManager final {
 	private:
-		ClassManager() = delete;
-		ClassManager(const ClassManager&) = delete;
-		ClassManager& operator =(const ClassManager&) = delete;
-		ClassManager(ClassManager&&) = delete;
-		ClassManager& operator =(ClassManager&&) = delete;
+		HookManager() = delete;
+		HookManager(const HookManager&) = delete;
+		HookManager& operator =(const HookManager&) = delete;
+		HookManager(HookManager&&) = delete;
+		HookManager& operator =(HookManager&&) = delete;
 
-		static inline std::invalid_argument noFuncDataException = std::invalid_argument("No data for argument func in ClassManager::GetFuncData");
+		static inline std::invalid_argument noFuncDataException = std::invalid_argument("No data for argument func in HookManager::GetFuncData");
 
 	public:
 		
