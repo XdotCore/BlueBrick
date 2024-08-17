@@ -9,7 +9,7 @@
 #include <regex>
 
 // The logger instance used for main BlueBrick logs
-extern BlueBrick::Logger MainLogger;
+BlueBrick::Logger MainLogger = BlueBrick::Logger(nullptr);
 
 namespace BlueBrick {
 

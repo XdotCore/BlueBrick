@@ -47,7 +47,7 @@ namespace BlueBrick {
 
 		Ret Call(Class* _this, const Args&... args) override {
 			Base* _base = static_cast<Base*>(_this);
-			return static_cast<CallType>(GetPtr())(_base, args...);
+			return reinterpret_cast<CallType>(GetPtr())(_base, args...);
 		}
 
 		void ApplyHook() override {
@@ -61,20 +61,47 @@ namespace BlueBrick {
 			rcmp::hook_indirect_function<decltype(*this), RcmpType>(GetVftableAtIndex(), [this](auto original, Base* _base, Args&&... args) -> Ret {
 				Class* _this = static_cast<Class*>(_base);
 
-				for (PrefixType prefix : this->prefixHooks)
-					prefix(_this, args...);
+				for (PrefixType prefix : this->prefixHooks) {
+					try { 
+						prefix(_this, args...);
+					}
+					catch (const std::exception& e) {
+						MainLogger.Message(Severity::Error, "Exception in prefix to {}: {}", this->name, e.what());
+					}
+					catch (...) {
+						MainLogger.Message(Severity::Error, "Unknown thrown in prefix to {}", this->name);
+					}
+				}
 
 				if constexpr (std::is_same_v<Ret, void>) {
 					original(_base, args...);
 
-					for (PostfixType postfix : this->postfixHooks)
-						postfix(_this, args...);
+					for (PostfixType postfix : this->postfixHooks) {
+						try {
+							postfix(_this, args...);
+						}
+						catch (const std::exception& e) {
+							MainLogger.Message(Severity::Error, "Exception in postfix to {}: {}", this->name, e.what());
+						}
+						catch (...) {
+							MainLogger.Message(Severity::Error, "Unknown thrown in postfix to {}", this->name);
+						}
+					}
 				}
 				else {
 					Ret result = original(_base, args...);
 
-					for (PostfixType postfix : this->postfixHooks)
-						result = postfix(_this, args...);
+					for (PostfixType postfix : this->postfixHooks) {
+						try {
+							result = postfix(_this, args...);
+						}
+						catch (const std::exception& e) {
+							MainLogger.Message(Severity::Error, "Exception in postfix to {}: {}", this->name, e.what());
+						}
+						catch (...) {
+							MainLogger.Message(Severity::Error, "Unknown thrown in postfix to {}", this->name);
+						}
+					}
 
 					return result;
 				}

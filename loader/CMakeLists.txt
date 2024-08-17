@@ -25,7 +25,6 @@ set_target_properties(${PROJECT_NAME} PROPERTIES
 )
 
 include(FetchContent)
-
 FetchContent_Declare(
     rcmp
     GIT_REPOSITORY "https://github.com/Smertig/rcmp.git"

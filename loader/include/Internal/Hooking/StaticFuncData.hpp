@@ -41,7 +41,7 @@ namespace BlueBrick {
 		}
 
 		Ret Call(const Args&... args) override {
-			return static_cast<CallType>(GetPtr())(args...);
+			return reinterpret_cast<CallType>(GetPtr())(args...);
 		}
 
 		void ApplyHook() override {
@@ -53,20 +53,47 @@ namespace BlueBrick {
 			MainLogger.Message(Severity::Debug, "Hooking static function {}", this->name);
 
 			rcmp::hook_function<decltype(*this), RcmpType>(GetPtr(), [this](auto original, Args&&... args) -> Ret {
-				for (PrefixType prefix : this->prefixHooks)
-					prefix(args...);
+				for (PrefixType prefix : this->prefixHooks) {
+					try {
+						prefix(args...);
+					}
+					catch (const std::exception& e) {
+						MainLogger.Message(Severity::Error, "Exception in prefix to {}: {}", this->name, e.what());
+					}
+					catch (...) {
+						MainLogger.Message(Severity::Error, "Unknown thrown in prefix to {}", this->name);
+					}
+				}
 
 				if constexpr (std::is_same_v<Ret, void>) {
 					original(args...);
 
-					for (PostfixType postfix : this->postfixHooks)
-						postfix(args...);
+					for (PostfixType postfix : this->postfixHooks) {
+						try {
+							postfix(args...);
+						}
+						catch (const std::exception& e) {
+							MainLogger.Message(Severity::Error, "Exception in postfix to {}: {}", this->name, e.what());
+						}
+						catch (...) {
+							MainLogger.Message(Severity::Error, "Unknown thrown in postfix to {}", this->name);
+						}
+					}
 				}
 				else {
 					Ret result = original(args...);
 
-					for (PostfixType postfix : this->postfixHooks)
-						result = postfix(args...);
+					for (PostfixType postfix : this->postfixHooks) {
+						try {
+							result = postfix(args...);
+						}
+						catch (const std::exception& e) {
+							MainLogger.Message(Severity::Error, "Exception in postfix to {}: {}", this->name, e.what());
+						}
+						catch (...) {
+							MainLogger.Message(Severity::Error, "Unknown thrown in postfix to {}", this->name);
+						}
+					}
 
 					return result;
 				}

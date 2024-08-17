@@ -3,8 +3,9 @@
 
 namespace BlueBrick {
 
-	Mod::Mod() {
-		Logger = std::unique_ptr<BlueBrick::Logger>(new BlueBrick::Logger(this));
+	Mod::Mod() :
+		Logger(std::shared_ptr<BlueBrick::Logger>(new BlueBrick::Logger(this))),
+		Dll(ModLoader::GetDll()) {
 		ModLoader::AddMod(this);
 	}
 
