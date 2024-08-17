@@ -6,7 +6,7 @@ using namespace Lego::Events;
 using namespace Lego::GUI;
 using namespace BlueBrick;
 
-extern BlueBrick::Logger MainLogger;
+extern Logger MainLogger;
 
 namespace Lego::GUI {
 

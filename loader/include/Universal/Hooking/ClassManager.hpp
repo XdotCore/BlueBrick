@@ -11,8 +11,6 @@ namespace BlueBrick {
 	/// <summary>
 	/// A static class that manages the hooking of classes
 	/// </summary>
-	/// <typeparam name="Class"> The class that it is working on </typeparam>
-	template<class Class>
 	class ClassManager final {
 	private:
 		ClassManager() = delete;
@@ -21,16 +19,7 @@ namespace BlueBrick {
 		ClassManager(ClassManager&&) = delete;
 		ClassManager& operator =(ClassManager&&) = delete;
 
-		template<typename A, typename B>
-		static bool IsSameAndEqual(A a, B b) {
-			if constexpr (std::is_same_v<A, B>) {
-				if (a == b)
-					return true;
-			}
-			return false;
-		}
-
-		static inline std::invalid_argument noFuncDataException = std::invalid_argument(std::format("No data for argument func in ClassManager<{}>::GetFuncData", typeid(Class).name()));
+		static inline std::invalid_argument noFuncDataException = std::invalid_argument("No data for argument func in ClassManager::GetFuncData");
 
 	public:
 		
@@ -41,7 +30,7 @@ namespace BlueBrick {
 		/// <typeparam name="...Args"> The argument types of the function </typeparam>
 		/// <param name="func"> The mirrored function within the BlueBrick library </param>
 		/// <returns> The function information if found </returns>
-		template<typename Ret, typename... Args>
+		template<class Class, typename Ret, typename... Args>
 		static FuncDataBase& GetFuncData(Ret(Class::* func)(Args...)) {
 			throw noFuncDataException;
 		}
@@ -53,7 +42,7 @@ namespace BlueBrick {
 		/// <typeparam name="...Args"> The argument types of the function </typeparam>
 		/// <param name="func"> The mirrored function within the BlueBrick library </param>
 		/// <returns> The function information if found </returns>
-		template<typename Ret, typename... Args>
+		template<class Class, typename Ret, typename... Args>
 		static FuncDataBase& GetFuncData(Ret(*func)(Args...)) {
 			throw noFuncDataException;
 		}
@@ -65,7 +54,7 @@ namespace BlueBrick {
 		/// <typeparam name="Ret"> The argument types of the function </typeparam>
 		/// <param name="func"> The mirrored function within the BlueBrick library </param>
 		/// <param name="prefix"> The function to be called </param>
-		template<typename Ret, typename... Args>
+		template<class Class, typename Ret, typename... Args>
 		static void AttachPrefix(Ret(Class::* func)(Args...), Ret(*prefix)(Class*, Args...)) {
 			using DataType = FuncData<Ret(Class::*)(Args...)>&;
 			DataType data = dynamic_cast<DataType>(GetFuncData(func));
@@ -81,10 +70,10 @@ namespace BlueBrick {
 		/// <typeparam name="...Args"> The argument types of the function </typeparam>
 		/// <param name="func"> The mirrored function within the BlueBrick library </param>
 		/// <param name="prefix"> The function to be called </param>
-		template<typename Ret, typename... Args>
+		template<class Class, typename Ret, typename... Args>
 		static void AttachPrefix(Ret(*func)(Args...), Ret(*prefix)(Args...)) {
 			using DataType = FuncData<Ret(Args...)>&;
-			DataType data = dynamic_cast<DataType>(GetFuncData(func));
+			DataType data = dynamic_cast<DataType>(GetFuncData<Class>(func));
 
 			data.AddPrefix(prefix);
 			data.ApplyHook();
@@ -97,7 +86,7 @@ namespace BlueBrick {
 		/// <typeparam name="Ret"> The argument types of the function </typeparam>
 		/// <param name="func"> The mirrored function within the BlueBrick library </param>
 		/// <param name="postfix"> The function to be called </param>
-		template<typename Ret, typename... Args>
+		template<class Class, typename Ret, typename... Args>
 		static void AttachPostfix(Ret(Class::* func)(Args...), Ret(*postfix)(Class*, Args...)) {
 			using DataType = FuncData<Ret(Class::*)(Args...)>&;
 			DataType data = dynamic_cast<DataType>(GetFuncData(func));
@@ -113,10 +102,10 @@ namespace BlueBrick {
 		/// <typeparam name="Ret"> The argument types of the function </typeparam>
 		/// <param name="func"> The mirrored function within the BlueBrick library </param>
 		/// <param name="postfix"> The function to be called </param>
-		template<typename Ret, typename... Args>
+		template<class Class, typename Ret, typename... Args>
 		static void AttachPostfix(Ret(*func)(Args...), Ret(*postfix)(Args...)) {
 			using DataType = FuncData<Ret(Args...)>&;
-			DataType data = dynamic_cast<DataType>(GetFuncData(func));
+			DataType data = dynamic_cast<DataType>(GetFuncData<Class>(func));
 
 			data.AddPostfix(postfix);
 			data.ApplyHook();

@@ -12,17 +12,16 @@ namespace Lego {
 	private:
 		static BlueBrick::FuncData<decltype(RunGame)>& RunGame_data();
 
-		friend BlueBrick::ClassManager<Global>;
+		friend BlueBrick::ClassManager;
 	};
 
 }
 
 template<>
-template<typename Ret, typename... Args>
-BlueBrick::FuncDataBase& BlueBrick::ClassManager<Lego::Global>::GetFuncData(Ret(*func)(Args...)) {
+BlueBrick::FuncDataBase& BlueBrick::ClassManager::GetFuncData<Lego::Global>(int(*func)(int, char**)) {
 	using namespace Lego;
 
-	if (IsSameAndEqual(func, Global::RunGame))
+	if (func == Global::RunGame)
 		return Global::RunGame_data();
 
 	throw noFuncDataException;

@@ -65,29 +65,62 @@ namespace Lego::GUI {
 		static BlueBrick::FuncData<decltype(&IEventListener_dtor)>& IEventListener_dtor_data();
 		static BlueBrick::FuncData<decltype(&RecieveEvent)>& RecieveEvent_data();
 
-		friend BlueBrick::ClassManager<MainMenuScreen>;
+		friend BlueBrick::ClassManager;
 	};
 
 }
 
+// these can't be defined in the cpp file because the location of a member function pointer is different based on which assembly it is obtained in
+
 template<>
-template<typename Ret, typename... Args>
-BlueBrick::FuncDataBase& BlueBrick::ClassManager<Lego::GUI::MainMenuScreen>::GetFuncData(Ret(Lego::GUI::MainMenuScreen::* func)(Args...)) {
+BlueBrick::FuncDataBase& BlueBrick::ClassManager::GetFuncData(void(Lego::GUI::MainMenuScreen::* func)()) {
 	using namespace Lego::GUI;
 
-	if (IsSameAndEqual(func, &MainMenuScreen::GUI2PageHandler_dtor))
+	if (func == &MainMenuScreen::GUI2PageHandler_dtor)
 		return MainMenuScreen::GUI2PageHandler_dtor_data();
-	if (IsSameAndEqual(func, &MainMenuScreen::Update))
-		return MainMenuScreen::Update_data();
-	if (IsSameAndEqual(func, &MainMenuScreen::GetGUI2PageHandler_int_0xc))
-		return MainMenuScreen::GetGUI2PageHandler_int_0xc_data();
-	if (IsSameAndEqual(func, &MainMenuScreen::Return2))
-		return MainMenuScreen::Return2_data();
-	if (IsSameAndEqual(func, &MainMenuScreen::SetGUI2PageHandler_int_0xc))
-		return MainMenuScreen::SetGUI2PageHandler_int_0xc_data();
-	if (IsSameAndEqual(func, &MainMenuScreen::IEventListener_dtor))
+	if (func == &MainMenuScreen::IEventListener_dtor)
 		return MainMenuScreen::IEventListener_dtor_data();
-	if (IsSameAndEqual(func, &MainMenuScreen::RecieveEvent))
+
+	throw noFuncDataException;
+}
+
+template<>
+BlueBrick::FuncDataBase& BlueBrick::ClassManager::GetFuncData(void(Lego::GUI::MainMenuScreen::* func)(Lego::GUI::GUI2Page*, Lego::GUI::PageState, void**)) {
+	using namespace Lego::GUI;
+
+	if (func == &MainMenuScreen::Update)
+		return MainMenuScreen::Update_data();
+
+	throw noFuncDataException;
+}
+
+template<>
+BlueBrick::FuncDataBase& BlueBrick::ClassManager::GetFuncData(int(Lego::GUI::MainMenuScreen::* func)()) {
+	using namespace Lego::GUI;
+
+	if (func == &MainMenuScreen::GetGUI2PageHandler_int_0xc)
+		return MainMenuScreen::GetGUI2PageHandler_int_0xc_data();
+	if (func == &MainMenuScreen::Return2)
+		return MainMenuScreen::Return2_data();
+
+	throw noFuncDataException;
+}
+
+template<>
+BlueBrick::FuncDataBase& BlueBrick::ClassManager::GetFuncData(void(Lego::GUI::MainMenuScreen::* func)(int)) {
+	using namespace Lego::GUI;
+
+	if (func == &MainMenuScreen::SetGUI2PageHandler_int_0xc)
+		return MainMenuScreen::SetGUI2PageHandler_int_0xc_data();
+
+	throw noFuncDataException;
+}
+
+template<>
+BlueBrick::FuncDataBase& BlueBrick::ClassManager::GetFuncData(void(Lego::GUI::MainMenuScreen::* func)(Lego::Events::Event*, Lego::Events::NuEventData*)) {
+	using namespace Lego::GUI;
+
+	if (func == &MainMenuScreen::RecieveEvent)
 		return MainMenuScreen::RecieveEvent_data();
 
 	throw noFuncDataException;

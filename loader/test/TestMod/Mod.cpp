@@ -30,11 +30,11 @@ public:
 		Logger->Message(Severity::Warning, "Warning: warning");
 		Logger->Message(Severity::Error, "Error: error");
 
-		ClassManager<MainMenuScreen>::AttachPrefix(&MainMenuScreen::Update, a);
-		ClassManager<MainMenuScreen>::AttachPostfix(&MainMenuScreen::Update, b);
-		ClassManager<MainMenuScreen>::AttachPrefix(&MainMenuScreen::RecieveEvent, c);
+		ClassManager::AttachPrefix(&MainMenuScreen::Update, a);
+		ClassManager::AttachPostfix(&MainMenuScreen::Update, b);
+		ClassManager::AttachPrefix(&MainMenuScreen::RecieveEvent, c);
 
-		ClassManager<Global>::AttachPrefix(Global::RunGame, d);
+		ClassManager::AttachPrefix<Global>(Global::RunGame, d);
 	}
 
 	static void a(MainMenuScreen* _this, GUI2Page* page, PageState state, void** m) {
