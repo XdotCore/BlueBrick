@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Hooking/FuncData.hpp"
+#include "HookableFuncData.hpp"
 #include "Logger/Logger.hpp"
 #include "rcmp.hpp"
 #include <windows.h>
@@ -11,27 +11,24 @@ namespace BlueBrick {
 
 #if RCMP_GET_ARCH() == RCMP_ARCH_X86
 	template<intptr_t ptr, rcmp::cconv callconv, typename FuncType> requires std::is_function_v<FuncType>
-	class StaticFuncData : FuncData<FuncType> {};
+	class StaticFuncData : HookableFuncData<FuncType> {};
 
 	template<intptr_t ptr, rcmp::cconv callconv, typename Ret, typename... Args>
-	class StaticFuncData<ptr, callconv, Ret(Args...)> : public FuncData<Ret(Args...)> {
+	class StaticFuncData<ptr, callconv, Ret(Args...)> : public HookableFuncData<Ret(Args...)> {
 	public:
 		using RcmpType = rcmp::generic_signature_t<Ret(Args...), callconv>;
 #else
 	template<intptr_t ptr, typename FuncType> requires std::is_function_v<FuncType>
-	class StaticFuncData : FuncData<FuncType> {};
+	class StaticFuncData : HookableFuncData<FuncType> {};
 
 	template<intptr_t ptr, typename Ret, typename... Args>
-	class StaticFuncData<ptr, Ret(Args...)> : public FuncData<Ret(Args...)> {
+	class StaticFuncData<ptr, Ret(Args...)> : public HookableFuncData<Ret(Args...)> {
 	public:
 		using RcmpType = rcmp::generic_signature_t<Ret(Args...), rcmp::cconv::native_x64>;
 #endif
 		using CallType = rcmp::from_generic_signature<RcmpType>;
 
-		using base = FuncData<Ret(Args...)>;
-
-		using PrefixType = base::PrefixType;
-		using PostfixType = base::PostfixType;
+		using base = HookableFuncData<Ret(Args...)>;
 
 		StaticFuncData(const std::string& name) : base(name) {}
 
@@ -53,48 +50,14 @@ namespace BlueBrick {
 			MainLogger.Message(Severity::Debug, "Hooking static function {}", this->name);
 
 			rcmp::hook_function<decltype(*this), RcmpType>(GetPtr(), [this](auto original, Args&&... args) -> Ret {
-				for (PrefixType prefix : this->prefixHooks) {
-					try {
-						prefix(args...);
-					}
-					catch (const std::exception& e) {
-						MainLogger.Message(Severity::Error, "Exception in prefix to {}: {}", this->name, e.what());
-					}
-					catch (...) {
-						MainLogger.Message(Severity::Error, "Unknown thrown in prefix to {}", this->name);
-					}
-				}
-
+				this->template CallPrefixes<Ret, Args...>(std::forward<Args>(args)...);
 				if constexpr (std::is_same_v<Ret, void>) {
 					original(args...);
-
-					for (PostfixType postfix : this->postfixHooks) {
-						try {
-							postfix(args...);
-						}
-						catch (const std::exception& e) {
-							MainLogger.Message(Severity::Error, "Exception in postfix to {}: {}", this->name, e.what());
-						}
-						catch (...) {
-							MainLogger.Message(Severity::Error, "Unknown thrown in postfix to {}", this->name);
-						}
-					}
+					this->template CallPostfixes<Args...>(std::forward<Args>(args)...);
 				}
 				else {
 					Ret result = original(args...);
-
-					for (PostfixType postfix : this->postfixHooks) {
-						try {
-							result = postfix(args...);
-						}
-						catch (const std::exception& e) {
-							MainLogger.Message(Severity::Error, "Exception in postfix to {}: {}", this->name, e.what());
-						}
-						catch (...) {
-							MainLogger.Message(Severity::Error, "Unknown thrown in postfix to {}", this->name);
-						}
-					}
-
+					this->template CallPostfixes<Ret, Args...>(result, std::forward<Args>(args)...);
 					return result;
 				}
 			});
