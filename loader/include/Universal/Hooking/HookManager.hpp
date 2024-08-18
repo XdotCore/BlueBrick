@@ -112,7 +112,7 @@ namespace BlueBrick {
 			using DataType = FuncData<Ret(Args...)>&;
 			DataType data = dynamic_cast<DataType>(GetFuncData<Class>(func));
 
-			auto hook = new HookPatch<Ret(*)(Class*, Args...)>(mod, postfix);
+			auto hook = new HookPatch<Ret(*)(Args...)>(mod, postfix);
 			data.AddPostfix(hook);
 			data.ApplyHook();
 
