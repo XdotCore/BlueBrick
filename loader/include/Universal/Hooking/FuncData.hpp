@@ -1,8 +1,10 @@
 #pragma once
 
 #include "Export.hpp"
+#include "Hook.hpp"
 #include <vector>
 #include <string>
+#include <memory>
 
 namespace BlueBrick {
 
@@ -24,15 +26,15 @@ namespace BlueBrick {
 		using PrefixType = Ret(*)(Class*, Args...);
 		using PostfixType = Ret(*)(Class*, Args...);
 
-		std::vector<PrefixType> prefixHooks;
-		std::vector<PostfixType> postfixHooks;
+		std::vector<std::unique_ptr<HookPatch<PrefixType>>> prefixHooks;
+		std::vector<std::unique_ptr<HookPatch<PostfixType>>> postfixHooks;
 	public:
 		FuncData(const std::string& name) : FuncDataBase(name) { }
 
 		virtual Ret Call(Class* _this, const Args&... args) = 0;
 
-		void AddPrefix(PrefixType prefix) { prefixHooks.push_back(prefix); }
-		void AddPostfix(PostfixType postfix) { postfixHooks.push_back(postfix); }
+		void AddPrefix(HookPatch<PrefixType>* prefix) { prefixHooks.push_back(std::unique_ptr<HookPatch<PrefixType>>(prefix)); }
+		void AddPostfix(HookPatch<PostfixType>* postfix) { postfixHooks.push_back(std::unique_ptr<HookPatch<PrefixType>>(postfix)); }
 	};
 
 	template<typename Ret, typename... Args>
@@ -41,15 +43,15 @@ namespace BlueBrick {
 		using PrefixType = Ret(*)(Args...);
 		using PostfixType = Ret(*)(Args...);
 
-		std::vector<PrefixType> prefixHooks;
-		std::vector<PostfixType> postfixHooks;
+		std::vector<std::unique_ptr<HookPatch<PrefixType>>> prefixHooks;
+		std::vector<std::unique_ptr<HookPatch<PostfixType>>> postfixHooks;
 	public:
 		FuncData(const std::string& name) : FuncDataBase(name) { }
 
 		virtual Ret Call(const Args&... args) = 0;
 
-		void AddPrefix(PrefixType prefix) { prefixHooks.push_back(prefix); }
-		void AddPostfix(PostfixType postfix) { postfixHooks.push_back(postfix); }
+		void AddPrefix(HookPatch<PrefixType>* prefix) { prefixHooks.push_back(std::unique_ptr<HookPatch<PrefixType>>(prefix)); }
+		void AddPostfix(HookPatch<PostfixType>* postfix) { postfixHooks.push_back(std::unique_ptr<HookPatch<PrefixType>>(postfix)); }
 	};
 
 }

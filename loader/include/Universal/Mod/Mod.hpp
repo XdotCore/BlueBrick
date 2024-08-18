@@ -4,6 +4,7 @@
 #include "ModInfo.hpp"
 #include "Logger/Logger.hpp"
 #include "Logger/Color/ColorBase.hpp"
+#include "Hooking/HookManager.hpp"
 #include <string>
 #include <optional>
 
@@ -11,7 +12,8 @@ namespace BlueBrick {
 
 	class Mod {
 	public:
-		const std::shared_ptr<BlueBrick::Logger> Logger;
+		BlueBrick::Logger Logger;
+		BlueBrick::HookManager HookManager;
 
 		const std::string Dll;
 

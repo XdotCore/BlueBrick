@@ -2,26 +2,22 @@
 
 #include "Export.hpp"
 #include "FuncData.hpp"
-#include <optional>
 #include <stdexcept>
-#include <format>
 
 namespace BlueBrick {
+	class Mod;
 
 	/// <summary>
-	/// A static class that manages the hooking of classes
+	/// Manages mod hooking
 	/// </summary>
-	class HookManager final {
+	class BLUEBRICK_DLL HookManager final {
 	private:
-		HookManager() = delete;
-		HookManager(const HookManager&) = delete;
-		HookManager& operator =(const HookManager&) = delete;
-		HookManager(HookManager&&) = delete;
-		HookManager& operator =(HookManager&&) = delete;
-
 		static inline std::invalid_argument noFuncDataException = std::invalid_argument("No data for argument func in HookManager::GetFuncData");
 
+		Mod* mod;
+
 	public:
+		HookManager(Mod* mod);
 		
 		/// <summary>
 		/// Gets the information about the member function for hooking
@@ -55,12 +51,15 @@ namespace BlueBrick {
 		/// <param name="func"> The mirrored function within the BlueBrick library </param>
 		/// <param name="prefix"> The function to be called </param>
 		template<class Class, typename Ret, typename... Args>
-		static void AttachPrefix(Ret(Class::* func)(Args...), Ret(*prefix)(Class*, Args...)) {
+		Hook& AttachPrefix(Ret(Class::* func)(Args...), Ret(*prefix)(Class*, Args...)) {
 			using DataType = FuncData<Ret(Class::*)(Args...)>&;
 			DataType data = dynamic_cast<DataType>(GetFuncData(func));
 
-			data.AddPrefix(prefix);
+			auto hook = new HookPatch<Ret(*)(Class*, Args...)>(mod, prefix);
+			data.AddPrefix(hook);
 			data.ApplyHook();
+
+			return *hook;
 		}
 
 		/// <summary>
@@ -71,12 +70,15 @@ namespace BlueBrick {
 		/// <param name="func"> The mirrored function within the BlueBrick library </param>
 		/// <param name="prefix"> The function to be called </param>
 		template<class Class, typename Ret, typename... Args>
-		static void AttachPrefix(Ret(*func)(Args...), Ret(*prefix)(Args...)) {
+		Hook& AttachPrefix(Ret(*func)(Args...), Ret(*prefix)(Args...)) {
 			using DataType = FuncData<Ret(Args...)>&;
 			DataType data = dynamic_cast<DataType>(GetFuncData<Class>(func));
 
-			data.AddPrefix(prefix);
+			auto hook = new HookPatch<Ret(*)(Args...)>(mod, prefix);
+			data.AddPrefix(hook);
 			data.ApplyHook();
+
+			return *hook;
 		}
 
 		/// <summary>
@@ -87,12 +89,15 @@ namespace BlueBrick {
 		/// <param name="func"> The mirrored function within the BlueBrick library </param>
 		/// <param name="postfix"> The function to be called </param>
 		template<class Class, typename Ret, typename... Args>
-		static void AttachPostfix(Ret(Class::* func)(Args...), Ret(*postfix)(Class*, Args...)) {
+		Hook& AttachPostfix(Ret(Class::* func)(Args...), Ret(*postfix)(Class*, Args...)) {
 			using DataType = FuncData<Ret(Class::*)(Args...)>&;
 			DataType data = dynamic_cast<DataType>(GetFuncData(func));
 
-			data.AddPostfix(postfix);
+			auto hook = new HookPatch<Ret(*)(Class*, Args...)>(mod, postfix);
+			data.AddPostfix(hook);
 			data.ApplyHook();
+
+			return *hook;
 		}
 
 		/// <summary>
@@ -103,12 +108,15 @@ namespace BlueBrick {
 		/// <param name="func"> The mirrored function within the BlueBrick library </param>
 		/// <param name="postfix"> The function to be called </param>
 		template<class Class, typename Ret, typename... Args>
-		static void AttachPostfix(Ret(*func)(Args...), Ret(*postfix)(Args...)) {
+		Hook& AttachPostfix(Ret(*func)(Args...), Ret(*postfix)(Args...)) {
 			using DataType = FuncData<Ret(Args...)>&;
 			DataType data = dynamic_cast<DataType>(GetFuncData<Class>(func));
 
-			data.AddPostfix(postfix);
+			auto hook = new HookPatch<Ret(*)(Class*, Args...)>(mod, postfix);
+			data.AddPostfix(hook);
 			data.ApplyHook();
+
+			return *hook;
 		}
 	};
 

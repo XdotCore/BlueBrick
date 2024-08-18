@@ -14,7 +14,9 @@ using namespace Lego::Events;
 
 class TestMod : public Mod {
 public:
-	static inline std::shared_ptr<BlueBrick::Logger> Logger;
+	static inline BlueBrick::Logger* Logger;
+
+	static inline Hook* UpdatePostfix;
 
 	ModInfo& GetInfo() override {
 		static Color nameColor = Color(0x9932CC);
@@ -23,18 +25,18 @@ public:
 	}
 
 	void OnInitialized() override {
-		Logger = Mod::Logger;
+		Logger = &(Mod::Logger);
 
 		Logger->Message("Hello from test mod {1}😘💩{0} hello again {2} oog", Color::End(), Color::Aqua(), Color::DarkSalmon());
 		Logger->Message(Severity::Debug, "Debug: debug");
 		Logger->Message(Severity::Warning, "Warning: warning");
 		Logger->Message(Severity::Error, "Error: error");
 
-		HookManager::AttachPrefix(&MainMenuScreen::Update, a);
-		HookManager::AttachPostfix(&MainMenuScreen::Update, b);
-		HookManager::AttachPrefix(&MainMenuScreen::RecieveEvent, c);
+		HookManager.AttachPrefix(&MainMenuScreen::Update, a);
+		UpdatePostfix = &HookManager.AttachPostfix(&MainMenuScreen::Update, b);
+		HookManager.AttachPrefix(&MainMenuScreen::RecieveEvent, c);
 
-		HookManager::AttachPrefix<Global>(Global::RunGame, d);
+		HookManager.AttachPrefix<Global>(Global::RunGame, d);
 	}
 
 	static void a(MainMenuScreen* _this, GUI2Page* page, PageState state, void** m) {
@@ -43,6 +45,7 @@ public:
 
 	static void b(MainMenuScreen* _this, GUI2Page* page, PageState state, void** m) {
 		Logger->Message("Goodbye world!");
+		UpdatePostfix->SetEnabled(false);
 	}
 
 	static void c(MainMenuScreen* _this, Event* event, NuEventData* data) {
