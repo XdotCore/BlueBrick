@@ -13,4 +13,12 @@ namespace Lego {
 		return funcData;
 	}
 
+	void Global::AddToCoins(uint64* coinsPtr, uint64 toAdd, int multEnabled, bool roundTo10s) {
+		return AddToCoins_data().Call(coinsPtr, toAdd, multEnabled, roundTo10s);
+	}
+	FuncData<decltype(Global::AddToCoins)>& Global::AddToCoins_data() {
+		static StaticFuncData<0x7E1070, rcmp::cconv::cdecl_, decltype(AddToCoins)> funcData("Global::AddToCoins");
+		return funcData;
+	}
+
 }

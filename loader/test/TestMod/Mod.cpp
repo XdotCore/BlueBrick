@@ -33,12 +33,16 @@ public:
 		Logger->Message(Severity::Warning, "Warning: warning");
 		Logger->Message(Severity::Error, "Error: error");
 
+		// normal hook tests
 		HookManager.AttachPrefix(&MainMenuScreen::Update, a);
 		UpdatePostfix = &HookManager.AttachPostfix(&MainMenuScreen::Update, b);
 		HookManager.AttachPrefix(&MainMenuScreen::RecieveEvent, c);
 
 		HookManager.AttachPrefix<Global>(Global::RunGame, d);
 		HookManager.AttachPostfix<Global>(Global::RunGame, e);
+
+		// modify value hook tests
+		HookManager.AttachPrefix<Global>(Global::AddToCoins, f);
 	}
 
 	static void a(MainMenuScreen* _this, GUI2Page*& page, PageState& state, void**& m) {
@@ -63,5 +67,10 @@ public:
 
 	static void e(int& result, int cmdLineArgCount, char** cmdLineArgs) {
 		Logger->Message("Game End");
+	}
+
+	static void f(uint64*& coinsPtr, uint64& toAdd, int& multEnabled, bool& roundTo10s) {
+		toAdd = 69420;
+		roundTo10s = false;
 	}
 } testMod;

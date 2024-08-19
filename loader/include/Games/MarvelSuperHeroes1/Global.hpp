@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Export.hpp"
+#include "Types.hpp"
 #include "Hooking/HookManager.hpp"
 
 namespace Lego {
@@ -9,8 +10,11 @@ namespace Lego {
 	public:
 		static int RunGame(int cmdLineArgCount, char** cmdLineArgs);
 
+		static void AddToCoins(uint64* coinsPtr, uint64 toAdd, int multEnabled, bool roundTo10s);
+
 	private:
 		static BlueBrick::FuncData<decltype(RunGame)>& RunGame_data();
+		static BlueBrick::FuncData<decltype(AddToCoins)>& AddToCoins_data();
 
 		friend BlueBrick::HookManager;
 	};
@@ -23,6 +27,16 @@ BlueBrick::FuncDataBase& BlueBrick::HookManager::GetFuncData<Lego::Global>(int(*
 
 	if (func == Global::RunGame)
 		return Global::RunGame_data();
+
+	throw noFuncDataException;
+}
+
+template<>
+BlueBrick::FuncDataBase& BlueBrick::HookManager::GetFuncData<Lego::Global>(void(*func)(uint64*, uint64, int, bool)) {
+	using namespace Lego;
+
+	if (func == Global::AddToCoins)
+		return Global::AddToCoins_data();
 
 	throw noFuncDataException;
 }
