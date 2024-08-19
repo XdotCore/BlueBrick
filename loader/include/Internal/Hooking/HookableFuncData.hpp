@@ -68,7 +68,7 @@ namespace BlueBrick {
 					continue;
 
 				try {
-					result = postfix->Patch()(args...);
+					postfix->Patch()(result, args...);
 				}
 				catch (const std::exception& e) {
 					LogException("postfix", postfix->Owner(), e);

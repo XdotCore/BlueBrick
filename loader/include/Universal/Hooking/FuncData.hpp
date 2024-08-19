@@ -22,36 +22,50 @@ namespace BlueBrick {
 
 	template<class Class, typename Ret, typename... Args>
 	class FuncData<Ret(Class::*)(Args...)> : public FuncDataBase {
-	protected:
-		using PrefixType = Ret(*)(Class*, Args...);
-		using PostfixType = Ret(*)(Class*, Args...);
+	private:
+		template<typename Ret, typename... Args>
+		struct Postfix final { using type = void(*)(Ret&, Class*, Args...); };
+		template<typename... Args>
+		struct Postfix<void, Args...> final { using type = void(*)(Class*, Args...); };
 
-		std::vector<std::unique_ptr<HookPatch<PrefixType>>> prefixHooks;
-		std::vector<std::unique_ptr<HookPatch<PostfixType>>> postfixHooks;
 	public:
+		using PrefixType = void(*)(Class*, Args&...);
+		using PostfixType = Postfix<Ret, Args...>::type;
+
 		FuncData(const std::string& name) : FuncDataBase(name) { }
 
 		virtual Ret Call(Class* _this, const Args&... args) = 0;
 
 		void AddPrefix(HookPatch<PrefixType>* prefix) { prefixHooks.push_back(std::unique_ptr<HookPatch<PrefixType>>(prefix)); }
-		void AddPostfix(HookPatch<PostfixType>* postfix) { postfixHooks.push_back(std::unique_ptr<HookPatch<PrefixType>>(postfix)); }
+		void AddPostfix(HookPatch<PostfixType>* postfix) { postfixHooks.push_back(std::unique_ptr<HookPatch<PostfixType>>(postfix)); }
+
+	protected:
+		std::vector<std::unique_ptr<HookPatch<PrefixType>>> prefixHooks;
+		std::vector<std::unique_ptr<HookPatch<PostfixType>>> postfixHooks;
 	};
 
 	template<typename Ret, typename... Args>
 	class FuncData<Ret(Args...)> : public FuncDataBase {
-	protected:
-		using PrefixType = Ret(*)(Args...);
-		using PostfixType = Ret(*)(Args...);
+	private:
+		template<typename Ret, typename... Args>
+		struct Postfix final { using type = void(*)(Ret&, Args...); };
+		template<typename... Args>
+		struct Postfix<void, Args...> final { using type = void(*)(Args...); };
 
-		std::vector<std::unique_ptr<HookPatch<PrefixType>>> prefixHooks;
-		std::vector<std::unique_ptr<HookPatch<PostfixType>>> postfixHooks;
 	public:
+		using PrefixType = void(*)(Args&...);
+		using PostfixType = Postfix<Ret, Args...>::type;
+
 		FuncData(const std::string& name) : FuncDataBase(name) { }
 
 		virtual Ret Call(const Args&... args) = 0;
 
 		void AddPrefix(HookPatch<PrefixType>* prefix) { prefixHooks.push_back(std::unique_ptr<HookPatch<PrefixType>>(prefix)); }
-		void AddPostfix(HookPatch<PostfixType>* postfix) { postfixHooks.push_back(std::unique_ptr<HookPatch<PrefixType>>(postfix)); }
+		void AddPostfix(HookPatch<PostfixType>* postfix) { postfixHooks.push_back(std::unique_ptr<HookPatch<PostfixType>>(postfix)); }
+
+	protected:
+		std::vector<std::unique_ptr<HookPatch<PrefixType>>> prefixHooks;
+		std::vector<std::unique_ptr<HookPatch<PostfixType>>> postfixHooks;
 	};
 
 }

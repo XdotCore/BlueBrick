@@ -6,6 +6,7 @@
 #include "Logger/Color/Color256.hpp"
 #include <iostream>
 #include <windows.h>
+#include <functional>
 
 using namespace BlueBrick;
 using namespace Lego;
@@ -37,9 +38,10 @@ public:
 		HookManager.AttachPrefix(&MainMenuScreen::RecieveEvent, c);
 
 		HookManager.AttachPrefix<Global>(Global::RunGame, d);
+		HookManager.AttachPostfix<Global>(Global::RunGame, e);
 	}
 
-	static void a(MainMenuScreen* _this, GUI2Page* page, PageState state, void** m) {
+	static void a(MainMenuScreen* _this, GUI2Page*& page, PageState& state, void**& m) {
 		Logger->Message("Hello world!");
 	}
 
@@ -48,15 +50,18 @@ public:
 		UpdatePostfix->SetEnabled(false);
 	}
 
-	static void c(MainMenuScreen* _this, Event* event, NuEventData* data) {
+	static void c(MainMenuScreen* _this, Event*& event, NuEventData*& data) {
 		int base = (int)(GetModuleHandle(NULL)) - 0x400000;
 		Logger->Message("{:x}, {:x}, {:x}", (int)*(void**)_this - base, (int)event - base, (int)*(void**)data - base);
 	}
 
-	static int d(int cmdLineArgCount, char** cmdLineArgs) {
+	static void d(int& cmdLineArgCount, char**& cmdLineArgs) {
 		Logger->Message("{}", cmdLineArgCount);
 		for (int i = 0; i < cmdLineArgCount; i++)
 			Logger->Message("{}: {}", i, cmdLineArgs[i]);
-		return 0;
+	}
+
+	static void e(int& result, int cmdLineArgCount, char** cmdLineArgs) {
+		Logger->Message("Game End");
 	}
 } testMod;
