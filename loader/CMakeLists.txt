@@ -1,17 +1,22 @@
 project(BlueBrick-Loader VERSION ${BLUEBRICK_VERSION} LANGUAGES C CXX)
 
+string(REPLACE "RENDERER_" "" RENDERER_NAME ${GAME_RENDERER})
+string(REPLACE "RENDERER_API_" "" RENDERER_API_NAME ${GAME_RENDERER_API})
+
 file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS
 	"src/*.cpp"
 	"src/*.rc.in"
 	"src/Universal/*.cpp"
 	"src/Games/${TARGET_GAME}/*.cpp"
 	"src/Internal/*.cpp"
+	"src/Platform/${RENDERER_NAME}/${RENDERER_API_NAME}"
 )
 
 file(GLOB_RECURSE HEADERS CONFIGURE_DEPENDS
 	"include/Universal/*.hpp"
 	"include/Games/${TARGET_GAME}/*.hpp"
 	"include/Internal/*.hpp"
+	"include/Platform/${RENDERER_NAME}/${RENDERER_API_NAME}/*.hpp"
 )
 
 configure_file("src/version.rc.in" "version.rc")
@@ -24,6 +29,7 @@ set_target_properties(${PROJECT_NAME} PROPERTIES
 	VERSION ${BLUEBRICK_VERSION}
 )
 
+# rcmp hooking
 include(FetchContent)
 FetchContent_Declare(
     rcmp
@@ -33,26 +39,45 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(rcmp)
 target_link_libraries(${PROJECT_NAME} PUBLIC rcmp)
 
+# imgui
+file(GLOB IMGUI_SOURCES "imgui/*.cpp"
+	"imgui/backends/imgui_impl_${RENDERER_NAME}.cpp"
+	"imgui/backends/imgui_impl_${RENDERER_API_NAME}.cpp"
+)
+add_library(imgui STATIC ${IMGUI_SOURCES})
+target_include_directories(imgui PUBLIC "imgui/")
+target_link_libraries(${PROJECT_NAME} PUBLIC imgui)
+
+# compile definitions
 add_compile_definitions(TARGET_GAME="${TARGET_GAME}")
 add_compile_definitions(GAME_NAME="${GAME_NAME}")
 add_compile_definitions(BLUEBRICK_VERSION="${BLUEBRICK_VERSION}")
+add_compile_definitions(ARCH_x86=0)
+add_compile_definitions(ARCH_x64=1)
+add_compile_definitions(GAME_ARCH=${GAME_ARCH})
+add_compile_definitions(RENDERER_WIN32=0)
+add_compile_definitions(GAME_RENDERER=${GAME_RENDERER})
+add_compile_definitions(RENDERER_API_DX9=0)
+add_compile_definitions(GAME_RENDERER_API=${GAME_RENDERER_API})
+target_compile_definitions(${PROJECT_NAME} PRIVATE BLUEBRICK_EXPORTING)
+
+# includes
 target_include_directories(${PROJECT_NAME} PUBLIC
 	"include/Games/${TARGET_GAME}/"
 	"include/Universal/"
 	PRIVATE
 	"include/Internal/"
+	"include/Platform/${RENDERER_NAME}/${RENDERER_API_NAME}"
 )
 
-target_compile_definitions(${PROJECT_NAME} PRIVATE BLUEBRICK_EXPORTING)
-
+# subprojects
 add_subdirectory("launcher")
 add_subdirectory("test")
 
+# install
 set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
 install(TARGETS ProxyLauncher RUNTIME DESTINATION ".")
 install(TARGETS ${PROJECT_NAME} DESTINATION "BlueBrick/")
-install(DIRECTORY "include/Games/${TARGET_GAME}" DESTINATION "BlueBrick/include/")
-install(DIRECTORY "include/Universal" DESTINATION "BlueBrick/include/")
 if (COMPILE_TEST_MODS)
 	install(TARGETS TestMod RUNTIME DESTINATION "BlueBrick/Mods/")
 endif()

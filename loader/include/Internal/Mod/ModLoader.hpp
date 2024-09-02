@@ -5,18 +5,27 @@
 
 namespace BlueBrick {
 
-	class ModLoader {
+	class ModLoader final {
 	private:
 		std::vector<Mod*> loadedMods;
 		std::string currentDll;
 
-		static ModLoader& instance();
 	public:
+		static inline bool isImGuiSetUp = false;
+		static inline bool isImGuiShowing = true;
+
+		static ModLoader& instance();
+
 		static void Start();
 		static void LoadMods();
 		static void AddMod(Mod* mod);
 
 		static const std::string& GetDll();
+
+		static void AttachImGui();
+		static void StartImGui();
+		static void StopImGui();
+		static void DrawImGui();
 	};
 
 }

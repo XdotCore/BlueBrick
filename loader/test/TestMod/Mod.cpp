@@ -17,6 +17,7 @@ class TestMod : public Mod {
 public:
 	static inline BlueBrick::Logger* Logger;
 
+	static inline Hook* UpdatePrefix;
 	static inline Hook* UpdatePostfix;
 
 	ModInfo& GetInfo() override {
@@ -34,43 +35,54 @@ public:
 		Logger->Message(Severity::Error, "Error: error");
 
 		// normal hook tests
-		HookManager.AttachPrefix(&MainMenuScreen::Update, a);
-		UpdatePostfix = &HookManager.AttachPostfix(&MainMenuScreen::Update, b);
-		HookManager.AttachPrefix(&MainMenuScreen::RecieveEvent, c);
+		UpdatePrefix = &HookManager.AttachPrefix(&MainMenuScreen::Update, UpdatePrefixTest);
+		UpdatePostfix = &HookManager.AttachPostfix(&MainMenuScreen::Update, UpdatePostfixTest);
+		HookManager.AttachPrefix(&MainMenuScreen::RecieveEvent, RecieveEventTest);
 
-		HookManager.AttachPrefix<Global>(Global::RunGame, d);
-		HookManager.AttachPostfix<Global>(Global::RunGame, e);
+		HookManager.AttachPrefix<Global>(Global::RunGame, RunGamePrefixTest);
+		HookManager.AttachPostfix<Global>(Global::RunGame, RunGamePostfixTest);
 
 		// modify value hook tests
-		HookManager.AttachPrefix<Global>(Global::AddToCoins, f);
+		HookManager.AttachPrefix<Global>(Global::AddToCoins, AddToCoinsTest);
+
+		// test createWindow
+#undef CreateWindow
+		HookManager.AttachPostfix<Global>(Global::CreateWindow, [](int& result, void* hInstance, int param_2, char* icon) {
+			Logger->Message("Made window");
+		});
+		HookManager.AttachPostfix<Global>(Global::CreateAdditionalWindow, [](void*& result, void* _this, char* windowName, int x, int y, int width, int height) {
+			Logger->Message("Made additional window: {}, {}, {}, {}, {}", windowName, x, y, width, height);
+		});
 	}
 
-	static void a(MainMenuScreen* _this, GUI2Page*& page, PageState& state, void**& m) {
+	static void UpdatePrefixTest(MainMenuScreen* _this, GUI2Page*& page, PageState& state, void**& m) {
 		Logger->Message("Hello world!");
+		UpdatePrefix->SetEnabled(false);
 	}
 
-	static void b(MainMenuScreen* _this, GUI2Page* page, PageState state, void** m) {
+	static void UpdatePostfixTest(MainMenuScreen* _this, GUI2Page* page, PageState state, void** m) {
 		Logger->Message("Goodbye world!");
 		UpdatePostfix->SetEnabled(false);
 	}
 
-	static void c(MainMenuScreen* _this, Event*& event, NuEventData*& data) {
+	static void RecieveEventTest(MainMenuScreen* _this, Event*& event, NuEventData*& data) {
 		int base = (int)(GetModuleHandle(NULL)) - 0x400000;
 		Logger->Message("{:x}, {:x}, {:x}", (int)*(void**)_this - base, (int)event - base, (int)*(void**)data - base);
 	}
 
-	static void d(int& cmdLineArgCount, char**& cmdLineArgs) {
+	static void RunGamePrefixTest(int& cmdLineArgCount, char**& cmdLineArgs) {
 		Logger->Message("{}", cmdLineArgCount);
 		for (int i = 0; i < cmdLineArgCount; i++)
 			Logger->Message("{}: {}", i, cmdLineArgs[i]);
 	}
 
-	static void e(int& result, int cmdLineArgCount, char** cmdLineArgs) {
+	static void RunGamePostfixTest(int& result, int cmdLineArgCount, char** cmdLineArgs) {
 		Logger->Message("Game End");
 	}
 
-	static void f(uint64*& coinsPtr, uint64& toAdd, int& multEnabled, bool& roundTo10s) {
-		toAdd = 69420;
+	static void AddToCoinsTest(uint64*& coinsPtr, uint64& toAdd, int& multEnabled, bool& roundTo10s) {
+		toAdd = 42069;
 		roundTo10s = false;
 	}
+
 } testMod;

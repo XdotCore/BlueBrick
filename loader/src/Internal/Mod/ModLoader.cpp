@@ -1,5 +1,6 @@
 #include "Mod/ModLoader.hpp"
 #include "Logger/Logger.hpp"
+#include "imgui.h"
 #include <filesystem>
 #include <windows.h>
 
@@ -61,6 +62,7 @@ namespace BlueBrick {
 
 		AddVectoredExceptionHandler(0, HandleSEH);
 
+		AttachImGui();
 		LoadMods();
 	}
 
@@ -118,6 +120,26 @@ namespace BlueBrick {
 
 	const std::string& ModLoader::GetDll() {
 		return instance().currentDll;
+	}
+
+	void ModLoader::StartImGui() {
+		IMGUI_CHECKVERSION();
+		ImGui::CreateContext();
+		ImGui::StyleColorsDark();
+		ImGui::SetMouseCursor(ImGuiMouseCursor_Arrow);
+	}
+
+	void ModLoader::StopImGui() {
+		ImGui::DestroyContext();
+	}
+
+	void ModLoader::DrawImGui() {
+		ImGui::NewFrame();
+
+		ImGui::ShowDemoWindow();
+
+		ImGui::EndFrame();
+		ImGui::Render();
 	}
 
 }

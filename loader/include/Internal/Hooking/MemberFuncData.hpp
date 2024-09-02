@@ -9,7 +9,7 @@ extern BlueBrick::Logger MainLogger;
 
 namespace BlueBrick {
 
-#if RCMP_GET_ARCH() == RCMP_ARCH_X86
+#if GAME_ARCH == ARCH_x86
 	template<intptr_t vftable, int index, rcmp::cconv callconv, typename FuncType, class Base> requires std::is_member_function_pointer_v<FuncType>
 	class MemberFuncData : HookableFuncData<FuncType> {};
 
