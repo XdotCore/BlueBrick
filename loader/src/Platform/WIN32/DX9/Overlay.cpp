@@ -1,15 +1,10 @@
-#include "Mod/ModLoader.hpp"
+#include "Overlay.hpp"
 #include "Logger/Logger.hpp"
 #include "Logger/Color/Color.hpp"
 #include "rcmp.hpp"
 #include "imgui.h"
 #include "backends/imgui_impl_win32.h"
 #include "backends/imgui_impl_dx9.h"
-#define CINTERFACE
-#include <d3d9.h>
-#include <dinput.h>
-#undef CINTERFACE
-#include <windows.h>
 
 extern BlueBrick::Logger MainLogger;
 
@@ -18,15 +13,8 @@ extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg
 
 namespace BlueBrick {
 
-	static IDirect3D9* ID3D9 = nullptr;
-	static IDirect3DDevice9* Device = nullptr;
-
-	static HWND Window = nullptr;
-	static WNDPROC TrueWndProc = nullptr;
-
-	static LRESULT CALLBACK FakeWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
+	LRESULT CALLBACK Overlay_WIN32_DX9::FakeWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 		static ImGuiIO& io = ImGui::GetIO();
-		io.MouseDrawCursor = true;
 
 		if (ImGui_ImplWin32_WndProcHandler(hWnd, msg, wParam, lParam))
 			return true;
@@ -51,9 +39,12 @@ namespace BlueBrick {
 		return TrueWndProc(hWnd, msg, wParam, lParam);
 	}
 
-	static void HookDevice(IDirect3DDevice9* device) {
+	void Overlay_WIN32_DX9::HookDevice(IDirect3DDevice9* device) {
 		// reset imgui when the game does
 		rcmp::hook_function<decltype(device->lpVtbl->Reset)>(device->lpVtbl->Reset, [](auto original, IDirect3DDevice9* This, D3DPRESENT_PARAMETERS* pPresentationParameters) -> HRESULT {
+			// I know I will sometimes be copying over what is already there, but it doesn't really matter too much
+			Params = *pPresentationParameters;
+
 			ImGui_ImplDX9_InvalidateDeviceObjects();
 			HRESULT result = original(This, pPresentationParameters);
 			ImGui_ImplDX9_CreateDeviceObjects();
@@ -62,8 +53,8 @@ namespace BlueBrick {
 		});
 
 		// get endscene for rendering
-		rcmp::hook_function<decltype(device->lpVtbl->EndScene)>(device->lpVtbl->EndScene, [](auto original, IDirect3DDevice9* This) -> HRESULT {
-			if (!ModLoader::isImGuiSetUp) {
+		rcmp::hook_function<decltype(device->lpVtbl->EndScene)>(device->lpVtbl->EndScene, [this](auto original, IDirect3DDevice9* This) -> HRESULT {
+			if (!isSetUp) {
 				Device = This;
 				D3DDEVICE_CREATION_PARAMETERS params;
 				Device->lpVtbl->GetCreationParameters(Device, &params);
@@ -71,17 +62,17 @@ namespace BlueBrick {
 
 				TrueWndProc = (WNDPROC)SetWindowLongPtrA(Window, GWLP_WNDPROC, (LONG)FakeWndProc);
 
-				ModLoader::StartImGui();
+				Start();
 				ImGui_ImplWin32_Init(Window);
 				ImGui_ImplDX9_Init(Device);
 
-				ModLoader::isImGuiSetUp = true;
+				isSetUp = true;
 			}
 
 			ImGui_ImplWin32_NewFrame();
 			ImGui_ImplDX9_NewFrame();
 
-			ModLoader::DrawImGui();
+			Draw();
 
 			ImGui_ImplDX9_RenderDrawData(ImGui::GetDrawData());
 
@@ -94,18 +85,19 @@ namespace BlueBrick {
 		});
 	}
 
-	static void HookDirectX9(IDirect3D9* id3d9) {
+	void Overlay_WIN32_DX9::HookDirectX9(IDirect3D9* id3d9) {
 		// get game device
-		rcmp::hook_function<decltype(id3d9->lpVtbl->CreateDevice)>(id3d9->lpVtbl->CreateDevice, [](auto original, IDirect3D9* This, UINT Adapter, D3DDEVTYPE DeviceType, HWND hFocusWindow, DWORD BehaviorFlags, D3DPRESENT_PARAMETERS* pPresentationParameters, IDirect3DDevice9** ppReturnedDeviceInterface) -> HRESULT {
+		rcmp::hook_function<decltype(id3d9->lpVtbl->CreateDevice)>(id3d9->lpVtbl->CreateDevice, [this](auto original, IDirect3D9* This, UINT Adapter, D3DDEVTYPE DeviceType, HWND hFocusWindow, DWORD BehaviorFlags, D3DPRESENT_PARAMETERS* pPresentationParameters, IDirect3DDevice9** ppReturnedDeviceInterface) -> HRESULT {
 			HRESULT result = original(This, Adapter, DeviceType, hFocusWindow, BehaviorFlags, pPresentationParameters, ppReturnedDeviceInterface);
 
+			Params = *pPresentationParameters;
 			HookDevice(*ppReturnedDeviceInterface);
 
 			return result;
 		});
 	}
 
-	void ModLoader::AttachImGui() {
+	void Overlay_WIN32_DX9::AttachHooks() {
 		HMODULE d3d9 = LoadLibraryA("d3d9.dll");
 		if (!d3d9) {
 			MainLogger.Message(Severity::Error, "Could not load d3d9.dll");
@@ -115,14 +107,14 @@ namespace BlueBrick {
 		FARPROC direct3DCreate9Ex = GetProcAddress(d3d9, "Direct3DCreate9Ex");
 
 		// hook create directx 9
-		rcmp::hook_function<decltype(Direct3DCreate9)*>(direct3DCreate9, [](auto original, UINT SDKVersion) -> IDirect3D9* {
+		rcmp::hook_function<decltype(Direct3DCreate9)*>(direct3DCreate9, [this](auto original, UINT SDKVersion) -> IDirect3D9* {
 			ID3D9 = original(SDKVersion);
 			HookDirectX9(ID3D9);
 			return ID3D9;
 		});
 
 		// hook create directx 9 ex
-		rcmp::hook_function<decltype(Direct3DCreate9Ex)*>(direct3DCreate9Ex, [](auto original, UINT SDKVersion, IDirect3D9Ex** id3d9ex) -> HRESULT {
+		rcmp::hook_function<decltype(Direct3DCreate9Ex)*>(direct3DCreate9Ex, [this](auto original, UINT SDKVersion, IDirect3D9Ex** id3d9ex) -> HRESULT {
 			ID3D9 = reinterpret_cast<IDirect3D9*>(id3d9ex);
 			HookDirectX9(ID3D9);
 			return original(SDKVersion, id3d9ex);
@@ -151,6 +143,15 @@ namespace BlueBrick {
 		rcmp::hook_function<SetCursorPos>([](auto...) -> BOOL {
 			return false;
 		});
+	}
+
+	void Overlay_WIN32_DX9::ToggleFullscreen() {
+		if (fullscreen) {
+
+		}
+		else {
+
+		}
 	}
 
 }

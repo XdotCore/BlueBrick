@@ -6,8 +6,8 @@ namespace BlueBrick {
 	Mod::Mod() :
 		Logger(this),
 		HookManager(this),
-		Dll(ModLoader::GetDll()) {
-		ModLoader::AddMod(this);
+		Dll(ModLoader::instance().GetDll()) {
+		ModLoader::instance().AddMod(this);
 	}
 
 }

@@ -13,7 +13,7 @@ BOOL WINAPI DllMain(HINSTANCE dll, DWORD reason, LPVOID _) {
 	DisableThreadLibraryCalls(dll);
 
 	MessageBoxA(NULL, "for debugging", "a", MB_OK);
-	ModLoader::Start();
+	ModLoader::instance().Start();
 
 	return TRUE;
 }

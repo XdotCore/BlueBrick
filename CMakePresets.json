@@ -42,8 +42,8 @@
         "TARGET_GAME": "MarvelSuperHeroes1",
         "GAME_NAME": "Lego Marvel Super Heroes",
         "GAME_ARCH": "ARCH_x86",
-        "GAME_RENDERER": "RENDERER_WIN32",
-        "GAME_RENDERER_API": "RENDERER_API_DX9"
+        "GAME_PLATFORM": "PLATFORM_WIN32",
+        "GAME_RENDERER": "RENDERER_DX9"
       }
     },
     {

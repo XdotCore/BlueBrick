@@ -1,6 +1,5 @@
 #include "Mod/ModLoader.hpp"
 #include "Logger/Logger.hpp"
-#include "imgui.h"
 #include <filesystem>
 #include <windows.h>
 
@@ -62,8 +61,8 @@ namespace BlueBrick {
 
 		AddVectoredExceptionHandler(0, HandleSEH);
 
-		AttachImGui();
 		LoadMods();
+		Overlay::instance().AttachHooks();
 	}
 
 	void ModLoader::LoadMods() {
@@ -75,12 +74,12 @@ namespace BlueBrick {
 			if (!std::filesystem::is_regular_file(modFile) || !modFile.path().has_extension() || modFile.path().extension().string() != ".dll")
 				continue;
 
-			instance().currentDll = modFile.path().filename().string();
+			currentDll = modFile.path().filename().string();
 			LoadLibraryA(modFile.path().string().c_str());
 		}
 
 		// second pass: process mods that added themselves
-		for (Mod* mod : instance().loadedMods) {
+		for (Mod* mod : loadedMods) {
 			ModInfo* info;
 			try {
 				info = &mod->GetInfo();
@@ -115,31 +114,11 @@ namespace BlueBrick {
 	}
 
 	void ModLoader::AddMod(Mod* mod) {
-		instance().loadedMods.push_back(mod);
+		loadedMods.push_back(mod);
 	}
 
 	const std::string& ModLoader::GetDll() {
-		return instance().currentDll;
-	}
-
-	void ModLoader::StartImGui() {
-		IMGUI_CHECKVERSION();
-		ImGui::CreateContext();
-		ImGui::StyleColorsDark();
-		ImGui::SetMouseCursor(ImGuiMouseCursor_Arrow);
-	}
-
-	void ModLoader::StopImGui() {
-		ImGui::DestroyContext();
-	}
-
-	void ModLoader::DrawImGui() {
-		ImGui::NewFrame();
-
-		ImGui::ShowDemoWindow();
-
-		ImGui::EndFrame();
-		ImGui::Render();
+		return currentDll;
 	}
 
 }
