@@ -52,20 +52,13 @@ namespace BlueBrick {
 	}
 
 	static void HookDevice(IDirect3DDevice9* device) {
-		// this is the only way I found to get it to not ACCESS VIOLATION every time the window was resized
-		// probably has to do with imgui invalidation methods being too invasive, coupled with the game holding onto pointers that are invalidated (maybe?)
+		// reset imgui when the game does
 		rcmp::hook_function<decltype(device->lpVtbl->Reset)>(device->lpVtbl->Reset, [](auto original, IDirect3DDevice9* This, D3DPRESENT_PARAMETERS* pPresentationParameters) -> HRESULT {
-			SetWindowLongPtrA(Window, GWLP_WNDPROC, (LONG)TrueWndProc);
+			ImGui_ImplDX9_InvalidateDeviceObjects();
+			HRESULT result = original(This, pPresentationParameters);
+			ImGui_ImplDX9_CreateDeviceObjects();
 
-			ImGui_ImplWin32_Shutdown();
-			ImGui_ImplDX9_Shutdown();
-			ModLoader::StopImGui();
-
-			Device = nullptr;
-
-			ModLoader::isImGuiSetUp = false;
-
-			return original(This, pPresentationParameters);
+			return result;
 		});
 
 		// get endscene for rendering
