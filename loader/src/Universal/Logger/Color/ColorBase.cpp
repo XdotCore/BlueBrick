@@ -1,9 +1,10 @@
 #include "Logger/Color/ColorBase.hpp"
+#include "Logger/Color/ColorNone.hpp"
 
 namespace BlueBrick {
 
 	const std::string& ColorBase::End() {
-		static std::string end = "\x1b[0m";
+		static const std::string& end = ColorNone::None().Start();
 		return end;
 	}
 

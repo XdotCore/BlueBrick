@@ -11,6 +11,7 @@ namespace BlueBrick {
 	class BLUEBRICK_DLL Logger final {
 	private:
 		Mod* mod;
+
 	public:
 		Logger(Mod* mod);
 
@@ -47,7 +48,7 @@ namespace BlueBrick {
 		/// </summary>
 		/// <param name="severity"> The severity of the message </param>
 		/// <param name="fmt"> The message format </param>
-		/// <param name="...args"> The message args </param>
+		/// <param name="args"> The message args </param>
 		template<class... Args>
 		void Message(Severity severity, const std::string& fmt, Args&&... args) {
 			try {

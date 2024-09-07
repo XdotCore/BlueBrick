@@ -1,12 +1,33 @@
 #pragma once
 
+#include "Logger/Color/Color.hpp"
+#include "Logger/Color/ColorNone.hpp"
+#include <string>
+#include <vector>
+#include <variant>
+#include <optional>
+
 namespace BlueBrick {
 
 	class Overlay {
+	public:
+		// TODO: add hyperlinks to mod
+		using LogItemTypes = std::variant<std::string,
+		                                  Color,
+		                                  ColorNone>;
+
 	private:
 		bool isShowing = true;
 
+		bool showBlueBrickMenu = false;
+		bool showBricksMenu = false;
+
 		bool showDemoWindow = false;
+
+		bool showLogs = false;
+		std::vector<LogItemTypes> logItems;
+		bool logChanged = false;
+		void ShowLogs();
 
 	protected: // stuff needed for platform specifics can go in here and below
 		bool isSetUp = false;
@@ -14,9 +35,12 @@ namespace BlueBrick {
 		bool fullscreen = true;
 		int windowWidth = -1;
 		int windowHeight = -1;
+		int windowX = -1;
+		int windowY = -1;
 
 		void Start();
 		void Draw();
+		void PostDraw();
 
 		virtual void ToggleFullscreen() = 0;
 
@@ -24,6 +48,8 @@ namespace BlueBrick {
 		static Overlay& instance();
 
 		virtual void AttachHooks() = 0;
+
+		void AddLogItems(const std::vector<LogItemTypes>& items);
 	};
 
 }

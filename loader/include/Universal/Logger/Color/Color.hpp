@@ -10,23 +10,37 @@ namespace BlueBrick {
 	/// Represents a rgb color
 	/// </summary>
 	class BLUEBRICK_DLL Color final : public ColorBase {
-	public:// <summary>
-			/// The combined rgb int 0xRRGGBB
-			/// </summary>
-		const int rgb;
+	public:
+		// <summary>
+		/// The combined rgb int 0xRRGGBB
+		/// </summary>
+		int rgb;
 
 		/// <summary>
 		/// The red component
 		/// </summary>
-		const byte r;
+		byte r;
 		/// <summary>
 		/// The green component
 		/// </summary>
-		const byte g;
+		byte g;
 		/// <summary>
 		/// The blue component
 		/// </summary>
-		const byte b;
+		byte b;
+
+		/// <summary>
+		/// The red component bound from 0.0 to 1.0
+		/// </summary>
+		float rf;
+		/// <summary>
+		/// The green component bound from 0.0 to 1.0
+		/// </summary>
+		float gf;
+		/// <summary>
+		/// The blue component bound from 0.0 to 1.0
+		/// </summary>
+		float bf;
 
 		/// <summary>
 		/// Assigns the rgb values based on a combined rgb int

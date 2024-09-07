@@ -1,12 +1,16 @@
 #include "Logger/Logger.hpp"
 #include "Logger/Color/Color.hpp"
+#include "Logger/Color/Color256.hpp"
+#include "Logger/Color/ConsoleColor.hpp"
 #include "Mod/Mod.hpp"
+#include "Mod/Overlay.hpp"
 #include <windows.h>
 #include <iostream>
 #include <fstream>
 #include <sstream>
 #include <chrono>
 #include <regex>
+#include <vector>
 
 // The logger instance used for main BlueBrick logs
 BlueBrick::Logger MainLogger = BlueBrick::Logger(nullptr);
@@ -141,11 +145,55 @@ namespace BlueBrick {
 		if (InitConsole())
 			std::cout << msg;
 
+		// output to overlay
+		static std::regex overlayItemReg("(?:\x1b\\[(?:(38;2);([\\d]{1,3});([\\d]{1,3});([\\d]{1,3})|(38;5);([\\d]{1,3})|([\\d]{1,2}))m|[\r\n]+)");
+		std::vector<Overlay::LogItemTypes> overlayItems;
+
+		std::smatch colorMatch;
+		std::string::const_iterator searchStart = msg.cbegin();
+		while (std::regex_search(searchStart, msg.cend(), colorMatch, overlayItemReg)) {
+			// push string between matches
+			overlayItems.push_back(colorMatch.prefix().str());
+
+			// allow me to do newlines seperately
+			if (colorMatch.str()[0] == '\n' || colorMatch.str()[0] == '\r') {
+				overlayItems.push_back("\n");
+			}
+			if (colorMatch[1].str() == "38;2") {
+				byte r = std::stoi(colorMatch[2].str());
+				byte g = std::stoi(colorMatch[3].str());
+				byte b = std::stoi(colorMatch[4].str());
+				Color c(r, g, b);
+
+				overlayItems.push_back(c);
+			}
+			else if (colorMatch[5].str() == "38;5") {
+				byte val = std::stoi(colorMatch[6].str());
+				Color256 c(val);
+
+				// TODO: add color 256 support to overlay
+			}
+			else if (colorMatch[7].str() != "0") {
+				// TODO: add console color support to overlay
+			}
+			else { // reset color
+				overlayItems.push_back(ColorNone::None());
+			}
+
+			searchStart = colorMatch.suffix().first;
+		}
+
+		// add trailing text after last item
+		if (searchStart != msg.cend())
+			overlayItems.push_back(std::string(searchStart, msg.cend()));
+
+		Overlay::instance().AddLogItems(overlayItems);
+
 		// output to log
 		static std::ofstream file("BlueBrick/log.txt", std::ofstream::trunc);
 		static std::regex escapes("\x1b.*?m");
-		msg = std::regex_replace(msg, escapes, "");
-		file << msg;
+		std::string colorless = std::regex_replace(msg, escapes, "");
+		file << colorless;
 		file.flush();
 	}
 

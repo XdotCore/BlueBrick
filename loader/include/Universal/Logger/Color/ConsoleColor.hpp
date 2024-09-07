@@ -11,11 +11,12 @@ namespace BlueBrick {
 	class BLUEBRICK_DLL ConsoleColor final : public ColorBase {
 	private:
 		ConsoleColor(byte code);
+
 	public:
 		/// <summary>
 		/// The console code index of the color
 		/// </summary>
-		const byte code;
+		byte code;
 
 		/// <inheritdoc/>
 		std::string Start() const override;

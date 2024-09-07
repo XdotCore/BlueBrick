@@ -32,6 +32,14 @@
     },
 
     {
+      "name": "windows",
+      "hidden": true,
+      "cacheVariables": {
+        "GAME_OS": "OS_WINDOWS"  
+      }
+    },
+
+    {
       "name": "MarvelSuperHeroes1Base",
       "hidden": true,
       "architecture": {
@@ -41,20 +49,27 @@
       "cacheVariables": {
         "TARGET_GAME": "MarvelSuperHeroes1",
         "GAME_NAME": "Lego Marvel Super Heroes",
-        "GAME_ARCH": "ARCH_x86",
+        "GAME_ARCH": "ARCH_x86"
+      }
+    },
+    {
+      "name": "MarvelSuperHeroes1Windows",
+      "hidden": true,
+      "inherits": [ "MarvelSuperHeroes1Base", "windows" ],
+      "cacheVariables": {
         "GAME_PLATFORM": "PLATFORM_WIN32",
         "GAME_RENDERER": "RENDERER_DX9"
       }
     },
     {
-      "name": "MarvelSuperHeroes1Debug",
-      "displayName": "Marvel Super Heroes 1 Debug",
-      "inherits": [ "MarvelSuperHeroes1Base", "debug" ]
+      "name": "MarvelSuperHeroes1WindowsDebug",
+      "displayName": "Marvel Super Heroes 1 Windows Debug",
+      "inherits": [ "MarvelSuperHeroes1Windows", "debug" ]
     },
     {
-      "name": "MarvelSuperHeroes1Release",
-      "displayName": "Marvel Super Heroes 1 Release",
-      "inherits": [ "MarvelSuperHeroes1Base", "release" ]
+      "name": "MarvelSuperHeroes1WindowsRelease",
+      "displayName": "Marvel Super Heroes 1 Windows Release",
+      "inherits": [ "MarvelSuperHeroes1Windows", "release" ]
     }
   ]
 }

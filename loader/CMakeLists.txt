@@ -49,19 +49,29 @@ target_include_directories(imgui PUBLIC "imgui/")
 target_link_libraries(${PROJECT_NAME} PUBLIC imgui)
 
 # compile definitions
+add_compile_definitions(BLUEBRICK_VERSION="${BLUEBRICK_VERSION}")
+target_compile_definitions(${PROJECT_NAME} PRIVATE BLUEBRICK_EXPORTING)
+
 add_compile_definitions(TARGET_GAME="${TARGET_GAME}")
 add_compile_definitions(GAME_NAME="${GAME_NAME}")
-add_compile_definitions(BLUEBRICK_VERSION="${BLUEBRICK_VERSION}")
+
+add_compile_definitions(OS_WINDOWS=0)
+add_compile_definitions(GAME_OS=${GAME_OS})
+
 add_compile_definitions(ARCH_x86=0)
 add_compile_definitions(ARCH_x64=1)
 add_compile_definitions(GAME_ARCH=${GAME_ARCH})
+
 add_compile_definitions(PLATFORM_WIN32=0)
 add_compile_definitions(GAME_PLATFORM=${GAME_PLATFORM})
 add_compile_definitions(GAME_PLATFORM_NAME=${PLATFORM_NAME})
+
 add_compile_definitions(RENDERER_DX9=0)
+add_compile_definitions(RENDERER_DX10=1)
+add_compile_definitions(RENDERER_DX11=2)
+add_compile_definitions(RENDERER_DX12=3)
 add_compile_definitions(GAME_RENDERER=${GAME_RENDERER})
 add_compile_definitions(GAME_RENDERER_NAME=${RENDERER_NAME})
-target_compile_definitions(${PROJECT_NAME} PRIVATE BLUEBRICK_EXPORTING)
 
 # includes
 target_include_directories(${PROJECT_NAME} PUBLIC

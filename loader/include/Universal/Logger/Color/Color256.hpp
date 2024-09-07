@@ -13,7 +13,7 @@ namespace BlueBrick {
 		/// <summary>
 		/// The index of the color
 		/// </summary>
-		const byte val;
+		byte val;
 
 		/// <summary>
 		/// Assigns the color index
