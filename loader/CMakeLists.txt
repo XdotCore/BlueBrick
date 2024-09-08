@@ -39,11 +39,16 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(rcmp)
 target_link_libraries(loader PUBLIC rcmp)
 
-# freetype
+# freetype + lunasvg
 find_package(Freetype REQUIRED)
+find_package(unofficial-lunasvg CONFIG REQUIRED)
 
 # imgui
 add_compile_definitions(IMGUI_ENABLE_FREETYPE)
+add_compile_definitions(IMGUI_ENABLE_FREETYPE_LUNASVG)
+add_compile_definitions(IMGUI_USE_WCHAR32)
+add_compile_definitions(IMGUI_DISABLE_OBSOLETE_FUNCTIONS)
+
 file(GLOB IMGUI_SOURCES "imgui/*.cpp"
 	"imgui/backends/imgui_impl_${PLATFORM_NAME}.cpp"
 	"imgui/backends/imgui_impl_${RENDERER_NAME}.cpp"
@@ -52,6 +57,7 @@ file(GLOB IMGUI_SOURCES "imgui/*.cpp"
 add_library(imgui STATIC ${IMGUI_SOURCES})
 target_include_directories(imgui PUBLIC "imgui/")
 target_link_libraries(imgui PUBLIC Freetype::Freetype)
+target_link_libraries(imgui PUBLIC unofficial::lunasvg::lunasvg)
 target_link_libraries(loader PUBLIC imgui)
 
 # compile definitions

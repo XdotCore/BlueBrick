@@ -17,8 +17,6 @@ namespace BlueBrick {
 		switch (code) {
 			LOG_CODE(EXCEPTION_ACCESS_VIOLATION);
 			LOG_CODE(EXCEPTION_DATATYPE_MISALIGNMENT);
-			LOG_CODE(EXCEPTION_BREAKPOINT);
-			LOG_CODE(EXCEPTION_SINGLE_STEP);
 			LOG_CODE(EXCEPTION_ARRAY_BOUNDS_EXCEEDED);
 			LOG_CODE(EXCEPTION_FLT_DENORMAL_OPERAND);
 			LOG_CODE(EXCEPTION_FLT_DIVIDE_BY_ZERO);
@@ -47,7 +45,7 @@ namespace BlueBrick {
 
 		static constexpr unsigned int __fatalexception = 0x80000000; // codes below this are not actual errors
 		static constexpr unsigned int __cppexception = 0xE06D7363; // these should be handled by try/catch blocks
-		if (code >= __fatalexception && code != __cppexception) {
+		if (code >= __fatalexception && code != __cppexception && code != EXCEPTION_BREAKPOINT && code != EXCEPTION_SINGLE_STEP) {
 			const char* err = exceptionToString(code);
 			MainLogger.Message(Severity::Error, "FATAL ERROR: {} (0x{:X}) found in BlueBrick or a mod.", err, code);
 			MessageBoxA(NULL, std::format("{} (0x{:X}) found in BlueBrick or a mod.", err, code).c_str(), "FATAL ERROR", MB_ICONERROR);

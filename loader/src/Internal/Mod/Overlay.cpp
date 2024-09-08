@@ -1,6 +1,7 @@
 #include "Mod/Overlay.hpp"
 #include "Overlay.hpp" // The platform specific one
 #include "imgui.h"
+#include "misc/freetype/imgui_freetype.h"
 #include <thread>
 
 #undef WIN32 // messes up preproc
@@ -27,8 +28,33 @@ namespace BlueBrick {
 		// TODO: make this not not stack overflow lmao
 		//io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
 
-		// Regular [0]
-		io.Fonts->AddFontFromFileTTF("BlueBrick/fonts/CascadiaCode/CascadiaCode.ttf", 16.f);
+		// font constants
+		static constexpr const char* fontFile = "BlueBrick/fonts/CascadiaCode/CascadiaCode.ttf";
+		static constexpr const char* italicFontFile = "BlueBrick/fonts/CascadiaCode/CascadiaCodeItalic.ttf";
+		static constexpr const char* emojiFontFile = "BlueBrick/fonts/FluentUIEmoji/FluentUIEmojiFlat.ttf";
+		static constexpr float fontSize = 16.f;
+		static constexpr ImWchar fontRange[] = { 0x1, 0x1FFFF, 0 };
+
+		// Regular [0] only have emojis in regular to reduce load time
+		io.Fonts->AddFontFromFileTTF(fontFile, fontSize, nullptr, fontRange);
+		static ImFontConfig regularEmojiCfg;
+		regularEmojiCfg.OversampleH = regularEmojiCfg.OversampleV = 1;
+		regularEmojiCfg.MergeMode = true;
+		regularEmojiCfg.FontBuilderFlags |= ImGuiFreeTypeBuilderFlags_LoadColor;
+		io.Fonts->AddFontFromFileTTF(emojiFontFile, fontSize, &regularEmojiCfg, fontRange);
+
+		// Bold [1]
+		static ImFontConfig boldCfg;
+		boldCfg.FontBuilderFlags |= ImGuiFreeTypeBuilderFlags_Bold;
+		io.Fonts->AddFontFromFileTTF(fontFile, fontSize, &boldCfg, fontRange);
+
+		// Italic [2]
+		io.Fonts->AddFontFromFileTTF(italicFontFile, fontSize, nullptr, fontRange);
+
+		// Bold-Italic [3]
+		static ImFontConfig boldItalicCfg;
+		boldItalicCfg.FontBuilderFlags |= ImGuiFreeTypeBuilderFlags_Bold;
+		io.Fonts->AddFontFromFileTTF(italicFontFile, fontSize, &boldItalicCfg, fontRange);
 	}
 
 	void Overlay::Draw() {
