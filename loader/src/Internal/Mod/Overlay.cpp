@@ -26,6 +26,9 @@ namespace BlueBrick {
 		io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
 		// TODO: make this not not stack overflow lmao
 		//io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
+
+		// Regular [0]
+		io.Fonts->AddFontFromFileTTF("BlueBrick/fonts/CascadiaCode/CascadiaCode.ttf", 16.f);
 	}
 
 	void Overlay::Draw() {
@@ -76,7 +79,7 @@ namespace BlueBrick {
 	}
 
 	void Overlay::ShowLogs() {
-		ImGui::SetNextWindowSize(ImVec2(650, 650), ImGuiCond_FirstUseEver);
+		ImGui::SetNextWindowSize(ImVec2(700, 650), ImGuiCond_FirstUseEver);
 		ImGui::Begin("Log Window", &showLogs, ImGuiWindowFlags_HorizontalScrollbar);
 
 		ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 2));

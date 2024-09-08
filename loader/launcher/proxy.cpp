@@ -1,5 +1,6 @@
 #include <windows.h>
 #include <string>
+#include <format>
 
 struct XINPUT_STATE;
 struct XINPUT_VIBRATION;
@@ -65,8 +66,12 @@ extern "C" DWORD XInputGetCapabilities(DWORD dwUserIndex, DWORD dwFlags, XINPUT_
 BOOL WINAPI DllMain(HINSTANCE dll, DWORD reason, LPVOID _) {
 	switch (reason) {
 		case DLL_PROCESS_ATTACH:
-			if (!LoadLibraryW(L"BlueBrick/BlueBrick.dll"))
-				MessageBoxW(NULL, L"Failed to load BlueBrick.dll.\nCheck if it has been installed correctly.", L"Error", MB_OK);
+			// load dependencies
+			SetDllDirectoryA("BlueBrick/lib/");
+
+			// load bluebrick
+			if (!LoadLibraryA("BlueBrick/BlueBrick.dll"))
+				MessageBoxA(NULL, "Failed to load BlueBrick.dll.\nCheck if it has been installed correctly.", std::format("Error (0x{:x})", GetLastError()).c_str(), MB_OK);
 
 			break;
 	}
