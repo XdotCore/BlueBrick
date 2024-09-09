@@ -1,7 +1,8 @@
 #pragma once
 
-#include "ColorBase.hpp"
 #include "Types.hpp"
+#include <format>
+#include <sstream>
 #include <iomanip>
 
 namespace BlueBrick {
@@ -9,38 +10,48 @@ namespace BlueBrick {
 	/// <summary>
 	/// Represents a rgb color
 	/// </summary>
-	class BLUEBRICK_DLL Color final : public ColorBase {
+	class BLUEBRICK_DLL Color final {
+	private:
+		bool isNone = false;
+		byte r, g, b;
+
+		friend class std::formatter<Color>;
 	public:
+		/// <summary>
+		/// Determines if this is the reset color
+		/// </summary>
+		bool IsNone() const;
+
 		// <summary>
 		/// The combined rgb int 0xRRGGBB
 		/// </summary>
-		int rgb;
+		int GetRGB() const;
 
 		/// <summary>
 		/// The red component
 		/// </summary>
-		byte r;
+		byte GetR() const;
 		/// <summary>
 		/// The green component
 		/// </summary>
-		byte g;
+		byte GetG() const;
 		/// <summary>
 		/// The blue component
 		/// </summary>
-		byte b;
+		byte GetB() const;
 
 		/// <summary>
 		/// The red component bound from 0.0 to 1.0
 		/// </summary>
-		float rf;
+		float GetRFloat() const;
 		/// <summary>
 		/// The green component bound from 0.0 to 1.0
 		/// </summary>
-		float gf;
+		float GetGFloat() const;
 		/// <summary>
 		/// The blue component bound from 0.0 to 1.0
 		/// </summary>
-		float bf;
+		float GetBFloat() const;
 
 		/// <summary>
 		/// Assigns the rgb values based on a combined rgb int
@@ -54,9 +65,31 @@ namespace BlueBrick {
 		/// <param name="g"> The green component </param>
 		/// <param name="b"> The blue component </param>
 		Color(byte r, byte g, byte b);
+		/// <summary>
+		/// Assigns the rgb values based on the individual floating point components
+		/// </summary>
+		/// <param name="r"> The red component (0.0-1.0) </param>
+		/// <param name="g"> The green component (0.0-1.0) </param>
+		/// <param name="b"> The blue component (0.0-1.0) </param>
+		Color(float r, float g, float b);
 
-		/// <inheritdoc/>
-		std::string Start() const override;
+		/// <summary>
+		/// Tells the console to start the color
+		/// </summary>
+		/// <returns> The string console code </returns>
+		std::string Start() const;
+
+		/// <summary>
+		/// Tells the console to reset the color
+		/// </summary>
+		/// <returns> The string console code </returns>
+		static const std::string& End();
+
+		/// <summary>
+		/// Represents no color, used to reset the color
+		/// </summary>
+		/// <returns> A color instance </returns>
+		static const Color& None();
 
 	#pragma region web colors
 

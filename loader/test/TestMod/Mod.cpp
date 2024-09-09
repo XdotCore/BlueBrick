@@ -1,9 +1,7 @@
 ﻿#include "Mod/Mod.hpp"
 #include "GUI/Flow/Screens/MainMenuScreen.hpp"
 #include "Global.hpp"
-#include "Logger/Color/Color.hpp"
-#include "Logger/Color/ConsoleColor.hpp"
-#include "Logger/Color/Color256.hpp"
+#include "Logger/Color.hpp"
 #include "imgui.h"
 #include <iostream>
 #include <windows.h>
@@ -21,9 +19,8 @@ public:
 	static inline Hook* UpdatePrefix;
 	static inline Hook* UpdatePostfix;
 
-	ModInfo& GetInfo() override {
-		static Color nameColor = Color(0x9932CC);
-		static ModInfo info = ModInfo("TestMod", nameColor, "1.0.0", "X.Core", Color::DarkOrange());
+	const ModInfo& GetInfo() override {
+		static ModInfo info = ModInfo("TestMod", Color(0x9932CC), "1.0.0", "X.Core", Color::DarkOrange());
 		return info;
 	}
 
@@ -56,6 +53,14 @@ public:
 		});
 	}
 
+	void OnDraw() override {
+		ImGui::Begin("Test Mod Window");
+
+		ImGui::Text("Hello World!");
+
+		ImGui::End();
+	}
+
 	static void UpdatePrefixTest(MainMenuScreen* _this, GUI2Page*& page, PageState& state, void**& m) {
 		Logger->Message("Hello world!");
 		UpdatePrefix->SetEnabled(false);
@@ -84,14 +89,6 @@ public:
 	static void AddToCoinsTest(uint64*& coinsPtr, uint64& toAdd, int& multEnabled, bool& roundTo10s) {
 		toAdd = 42069;
 		roundTo10s = false;
-	}
-
-	void OnDraw() override {
-		ImGui::Begin("Test Mod Window");
-
-		ImGui::Text("Hello World!");
-
-		ImGui::End();
 	}
 
 } testMod;

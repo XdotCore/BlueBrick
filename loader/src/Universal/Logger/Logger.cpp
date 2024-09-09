@@ -1,7 +1,5 @@
 #include "Logger/Logger.hpp"
-#include "Logger/Color/Color.hpp"
-#include "Logger/Color/Color256.hpp"
-#include "Logger/Color/ConsoleColor.hpp"
+#include "Logger/Color.hpp"
 #include "Mod/Mod.hpp"
 #include "Mod/Overlay.hpp"
 #include <windows.h>
@@ -17,7 +15,7 @@ BlueBrick::Logger MainLogger = BlueBrick::Logger(nullptr);
 
 namespace BlueBrick {
 
-	bool canUseColor = false;
+	static bool canUseColor = false;
 
 	static void EnableColor(HANDLE outputHandle) {
 		DWORD dwMode = 0;
@@ -100,7 +98,7 @@ namespace BlueBrick {
 		std::string timeColor;
 		std::string typeColor;
 		std::string textColor;
-		std::string nameColor = isMain ? Color::DeepSkyBlue().Start() : mod->GetInfo().StartNameColor();
+		std::string nameColor = isMain ? Color::DeepSkyBlue().Start() : mod->GetInfo().NameColor.Start();
 
 		switch (severity) {
 			case Severity::Debug: {
@@ -146,7 +144,7 @@ namespace BlueBrick {
 			std::cout << msg;
 
 		// output to overlay
-		static std::regex overlayItemReg("(?:\x1b\\[(?:(38;2);([\\d]{1,3});([\\d]{1,3});([\\d]{1,3})|(38;5);([\\d]{1,3})|([\\d]{1,2}))m|[\r\n]+)");
+		static std::regex overlayItemReg("\x1b\\[(38;2);([\\d]{1,3});([\\d]{1,3});([\\d]{1,3})m|\x1b\\[0m|[\r\n]+");
 		std::vector<Overlay::LogItemTypes> overlayItems;
 
 		std::smatch colorMatch;
@@ -159,6 +157,7 @@ namespace BlueBrick {
 			if (colorMatch.str()[0] == '\n' || colorMatch.str()[0] == '\r') {
 				overlayItems.push_back("\n");
 			}
+			// color
 			if (colorMatch[1].str() == "38;2") {
 				byte r = std::stoi(colorMatch[2].str());
 				byte g = std::stoi(colorMatch[3].str());
@@ -167,17 +166,9 @@ namespace BlueBrick {
 
 				overlayItems.push_back(c);
 			}
-			else if (colorMatch[5].str() == "38;5") {
-				byte val = std::stoi(colorMatch[6].str());
-				Color256 c(val);
-
-				// TODO: add color 256 support to overlay
-			}
-			else if (colorMatch[7].str() != "0") {
-				// TODO: add console color support to overlay
-			}
-			else { // reset color
-				overlayItems.push_back(ColorNone::None());
+			// reset color
+			else {
+				overlayItems.push_back(Color::None());
 			}
 
 			searchStart = colorMatch.suffix().first;

@@ -1,27 +1,47 @@
-#include "Logger/Color/Color.hpp"
+#include "Logger/Color.hpp"
+#include <algorithm>
 
 namespace BlueBrick {
+
+	bool Color::IsNone() const { return isNone; }
+
+	int Color::GetRGB() const { return r + (g << 8) + (b << 16); }
+
+	byte Color::GetR() const { return r; }
+	byte Color::GetG() const { return g; }
+	byte Color::GetB() const { return b; }
+
+	float Color::GetRFloat() const { return r / 255.f; }
+	float Color::GetGFloat() const { return g / 255.f; }
+	float Color::GetBFloat() const { return b / 255.f; }
 
 	Color::Color(int rgb) : 
 		r((byte)(rgb >> 16)),
 		g((byte)(rgb >> 8)),
-		b((byte)rgb),
-		rgb(rgb),
-		rf((float)r / 255),
-		gf((float)g / 255),
-		bf((float)b / 255) { }
+		b((byte)rgb) { }
 
 	Color::Color(byte r, byte g, byte b) :
 		r(r),
 		g(g),
-		b(b),
-		rgb((r << 16) + (g << 8) + b),
-		rf((float)r / 255),
-		gf((float)g / 255),
-		bf((float)b / 255) { }
+		b(b) { }
+
+	Color::Color(float rf, float gf, float bf) :
+		r((byte)(std::clamp(rf, 0.f, 1.f) * 255)),
+		g((byte)(std::clamp(gf, 0.f, 1.f) * 255)),
+		b((byte)(std::clamp(bf, 0.f, 1.f) * 255)) { }
 
 	std::string Color::Start() const {
 		return std::format("\x1b[38;2;{};{};{}m", (int)this->r, (int)this->g, (int)this->b);
+	}
+	
+	const std::string& Color::End() {
+		static const std::string end = "\x1b[0m";
+		return end;
+	}
+
+	const Color& Color::None() {
+		static const byte bytes[sizeof(Color)] = { 1 }; // first field is isNone
+		return *(Color*)&bytes;
 	}
 
 #pragma region web colors

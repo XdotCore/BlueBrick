@@ -1,27 +1,24 @@
 #pragma once
 
-#include "Logger/Color/ColorBase.hpp"
+#include "Logger/Color.hpp"
 #include <string>
 #include <optional>
 
 namespace BlueBrick {
 
 	// TODO: optionally read this from a json file
-	struct ModInfo {
+	struct ModInfo final {
 	public:
 		const std::string Name;
-		const std::optional<const ColorBase*> NameColor;
+		const Color NameColor;
 		const std::string Version;
 		const std::string Author;
-		const std::optional<const ColorBase*> AuthorColor;
+		const Color AuthorColor;
 
-		BLUEBRICK_DLL ModInfo(std::string name, std::string version, std::string author);
-		BLUEBRICK_DLL ModInfo(std::string name, const ColorBase& nameColor, std::string version, std::string author);
-		BLUEBRICK_DLL ModInfo(std::string name, std::string version, std::string author, const ColorBase& authorColor);
-		BLUEBRICK_DLL ModInfo(std::string name, const ColorBase& nameColor, std::string version, std::string author, const ColorBase& authorColor);
-
-		BLUEBRICK_DLL std::string StartNameColor() const;
-		BLUEBRICK_DLL std::string StartAuthorColor() const;
+		BLUEBRICK_DLL ModInfo(const std::string& name, const std::string& version, const std::string& author);
+		BLUEBRICK_DLL ModInfo(const std::string& name, const Color& nameColor, const std::string& version, const std::string& author);
+		BLUEBRICK_DLL ModInfo(const std::string& name, const std::string& version, const std::string& author, const Color& authorColor);
+		BLUEBRICK_DLL ModInfo(const std::string& name, const Color& nameColor, const std::string& version, const std::string& author, const Color& authorColor);
 	};
 
 }

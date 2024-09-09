@@ -133,16 +133,13 @@ namespace BlueBrick {
 
 				if (colored)
 					ImGui::PopStyleColor();
-
-				ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(color.rf, color.gf, color.bf, 1));
-				colored = true;
-			}
-			// remove color
-			else if (std::holds_alternative<ColorNone>(item)) {
-				if (colored)
-					ImGui::PopStyleColor();
-
-				colored = false;
+				
+				if (color.IsNone())
+					colored = false;
+				else {
+					ImGui::PushStyleColor(ImGuiCol_Text, color.GetRGB() | IM_COL32_A_MASK);
+					colored = true;
+				}
 			}
 		}
 

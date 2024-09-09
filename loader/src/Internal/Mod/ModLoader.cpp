@@ -78,7 +78,7 @@ namespace BlueBrick {
 
 		// second pass: process mods that added themselves
 		for (Mod* mod : loadedMods) {
-			ModInfo* info;
+			const ModInfo* info;
 			try {
 				info = &mod->GetInfo();
 			}
@@ -95,11 +95,11 @@ namespace BlueBrick {
 				mod->OnInitialized();
 				MainLogger.Message("Loaded {1}{0}{5} v{2} by {4}{3}{5} in {6}",
 				                   /*0*/	info->Name,
-				                   /*1*/	info->StartNameColor(),
+				                   /*1*/	info->NameColor.Start(),
 				                   /*2*/	info->Version,
 				                   /*3*/	info->Author,
-				                   /*4*/	info->StartAuthorColor(),
-				                   /*5*/	ColorBase::End(),
+				                   /*4*/	info->AuthorColor.Start(),
+				                   /*5*/	Color::End(),
 				                   /*6*/	mod->Dll);
 			}
 			catch (const std::exception& e) {

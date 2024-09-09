@@ -2,48 +2,32 @@
 
 namespace BlueBrick {
 
-	ModInfo::ModInfo(std::string name, std::string version, std::string author) :
+	ModInfo::ModInfo(const std::string& name, const std::string& version, const std::string& author) :
 		Name(name),
-		NameColor(std::nullopt),
+		NameColor(Color::None()),
 		Version(version),
 		Author(author),
-		AuthorColor(std::nullopt) { }
+		AuthorColor(Color::None()) { }
 
-	ModInfo::ModInfo(std::string name, const ColorBase& nameColor, std::string version, std::string author) :
+	ModInfo::ModInfo(const std::string& name, const Color& nameColor, const std::string& version, const std::string& author) :
 		Name(name),
-		NameColor(&nameColor),
+		NameColor(nameColor),
 		Version(version),
 		Author(author),
-		AuthorColor(std::nullopt) { }
+		AuthorColor(Color::None()) { }
 
-	ModInfo::ModInfo(std::string name, std::string version, std::string author, const ColorBase& authorColor) :
+	ModInfo::ModInfo(const std::string& name, const std::string& version, const std::string& author, const Color& authorColor) :
 		Name(name),
-		NameColor(std::nullopt),
+		NameColor(Color::None()),
 		Version(version),
 		Author(author),
-		AuthorColor(&authorColor) { }
+		AuthorColor(authorColor) { }
 
-	ModInfo::ModInfo(std::string name, const ColorBase& nameColor, std::string version, std::string author, const ColorBase& authorColor) :
+	ModInfo::ModInfo(const std::string& name, const Color& nameColor, const std::string& version, const std::string& author, const Color& authorColor) :
 		Name(name),
-		NameColor(&nameColor),
+		NameColor(nameColor),
 		Version(version),
 		Author(author),
-		AuthorColor(&authorColor) { }
-
-	static std::string StartOptionalColor(std::optional<const ColorBase*> optCol) {
-		// second condition should never happen
-		if (!optCol.has_value() || *optCol == nullptr)
-			return ColorBase::End();
-
-		return (*optCol)->Start();
-	}
-
-	std::string ModInfo::StartNameColor() const {
-		return StartOptionalColor(NameColor);
-	}
-
-	std::string ModInfo::StartAuthorColor() const {
-		return StartOptionalColor(AuthorColor);
-	}
+		AuthorColor(authorColor) { }
 
 }

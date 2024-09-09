@@ -1,7 +1,6 @@
 #pragma once
 
-#include "Logger/Color/Color.hpp"
-#include "Logger/Color/ColorNone.hpp"
+#include "Logger/Color.hpp"
 #include <string>
 #include <vector>
 #include <variant>
@@ -13,8 +12,7 @@ namespace BlueBrick {
 	public:
 		// TODO: add hyperlinks to mod
 		using LogItemTypes = std::variant<std::string,
-		                                  Color,
-		                                  ColorNone>;
+		                                  Color>;
 
 	private:
 		bool isShowing = true;

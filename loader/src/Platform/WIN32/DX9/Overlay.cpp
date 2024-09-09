@@ -1,6 +1,5 @@
 #include "Overlay.hpp"
 #include "Logger/Logger.hpp"
-#include "Logger/Color/Color.hpp"
 #include "rcmp.hpp"
 #include "imgui.h"
 #include "backends/imgui_impl_win32.h"
