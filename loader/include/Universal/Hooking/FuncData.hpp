@@ -1,6 +1,5 @@
 #pragma once
 
-#include "Export.hpp"
 #include "Hook.hpp"
 #include <vector>
 #include <string>

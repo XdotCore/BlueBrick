@@ -1,6 +1,5 @@
 #pragma once
 
-#include "Export.hpp"
 #include "Logger/Color/ColorBase.hpp"
 #include <string>
 #include <optional>

@@ -4,6 +4,7 @@
 #include "Logger/Color/Color.hpp"
 #include "Logger/Color/ConsoleColor.hpp"
 #include "Logger/Color/Color256.hpp"
+#include "imgui.h"
 #include <iostream>
 #include <windows.h>
 #include <functional>
@@ -83,6 +84,14 @@ public:
 	static void AddToCoinsTest(uint64*& coinsPtr, uint64& toAdd, int& multEnabled, bool& roundTo10s) {
 		toAdd = 42069;
 		roundTo10s = false;
+	}
+
+	void OnDraw() override {
+		ImGui::Begin("Test Mod Window");
+
+		ImGui::Text("Hello World!");
+
+		ImGui::End();
 	}
 
 } testMod;

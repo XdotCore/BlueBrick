@@ -1,6 +1,5 @@
 #pragma once
 
-#include "Export.hpp"
 #include "Event.hpp"
 #include "EventData/NuEventData.hpp"
 

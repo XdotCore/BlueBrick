@@ -1,6 +1,5 @@
 #pragma once
 
-#include "Export.hpp"
 #include <type_traits>
 
 namespace BlueBrick {

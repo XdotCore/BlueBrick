@@ -1,6 +1,5 @@
 #pragma once
 
-#include "Export.hpp"
 #include "GUI/GUI2PageHandler.hpp"
 
 namespace Lego::GUI {

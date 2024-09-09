@@ -18,6 +18,7 @@ namespace BlueBrick {
 		void LoadMods();
 		void AddMod(Mod* mod);
 
+		const std::vector<Mod*>& GetLoadedMods();
 		const std::string& GetDll();
 	};
 

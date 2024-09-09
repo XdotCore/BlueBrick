@@ -6,4 +6,5 @@ target_link_libraries(TestMod PRIVATE loader)
 target_include_directories(TestMod PRIVATE
 	"../../include/Games/${TARGET_GAME}/"
 	"../../include/Universal/"
+	"../../imgui/"
 )

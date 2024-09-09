@@ -115,6 +115,10 @@ namespace BlueBrick {
 		loadedMods.push_back(mod);
 	}
 
+	const std::vector<Mod*>& ModLoader::GetLoadedMods() {
+		return loadedMods;
+	}
+
 	const std::string& ModLoader::GetDll() {
 		return currentDll;
 	}

@@ -1,5 +1,11 @@
 project(loader VERSION ${BLUEBRICK_VERSION} LANGUAGES C CXX)
 
+if (GAME_OS STREQUAL "OS_WINDOWS")
+	set(BLUEBRICK_DLL "__declspec(dllexport)")
+else()
+	set(BLUEBRICK_DLL "__attribute__((visibility(\"default\")))")
+endif()
+
 string(REPLACE "PLATFORM_" "" PLATFORM_NAME ${GAME_PLATFORM})
 string(REPLACE "RENDERER_" "" RENDERER_NAME ${GAME_RENDERER})
 
@@ -56,13 +62,14 @@ file(GLOB IMGUI_SOURCES "imgui/*.cpp"
 )
 add_library(imgui STATIC ${IMGUI_SOURCES})
 target_include_directories(imgui PUBLIC "imgui/")
+target_compile_definitions(imgui PRIVATE IMGUI_API=${BLUEBRICK_DLL})
 target_link_libraries(imgui PUBLIC Freetype::Freetype)
 target_link_libraries(imgui PUBLIC unofficial::lunasvg::lunasvg)
 target_link_libraries(loader PUBLIC imgui)
 
 # compile definitions
 add_compile_definitions(BLUEBRICK_VERSION="${BLUEBRICK_VERSION}")
-target_compile_definitions(loader PRIVATE BLUEBRICK_EXPORTING)
+target_compile_definitions(loader PRIVATE BLUEBRICK_DLL=${BLUEBRICK_DLL})
 
 add_compile_definitions(TARGET_GAME="${TARGET_GAME}")
 add_compile_definitions(GAME_NAME="${GAME_NAME}")
@@ -99,7 +106,6 @@ add_subdirectory("launcher")
 add_subdirectory("test")
 
 # install
-set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
 install(TARGETS launcher RUNTIME DESTINATION ".")
 install(TARGETS loader RUNTIME DESTINATION "BlueBrick/")
 

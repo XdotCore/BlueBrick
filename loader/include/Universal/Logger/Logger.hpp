@@ -1,6 +1,5 @@
 #pragma once
 
-#include "Export.hpp"
 #include "Severity.hpp"
 #include <string>
 #include <format>

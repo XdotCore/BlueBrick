@@ -1,6 +1,5 @@
 #pragma once
 
-#include "Export.hpp"
 #include "ModInfo.hpp"
 #include "Logger/Logger.hpp"
 #include "Logger/Color/ColorBase.hpp"
@@ -20,6 +19,7 @@ namespace BlueBrick {
 		virtual ModInfo& GetInfo() = 0;
 
 		virtual void OnInitialized() { }
+		virtual void OnDraw() { }
 
 		BLUEBRICK_DLL Mod();
 	};

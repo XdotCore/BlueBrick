@@ -1,6 +1,5 @@
 #pragma once
 
-#include "Export.hpp"
 #include "Types.hpp"
 #include "Hooking/HookManager.hpp"
 

@@ -1,5 +1,6 @@
 #include "Mod/Overlay.hpp"
 #include "Overlay.hpp" // The platform specific one
+#include "Mod/ModLoader.hpp"
 #include "imgui.h"
 #include "misc/freetype/imgui_freetype.h"
 #include <thread>
@@ -90,6 +91,10 @@ namespace BlueBrick {
 
 		if (showDemoWindow)
 			ImGui::ShowDemoWindow(&showDemoWindow);
+
+		for (Mod* mod : ModLoader::instance().GetLoadedMods()) {
+			mod->OnDraw();
+		}
 
 		ImGui::EndFrame();
 		ImGui::Render();
