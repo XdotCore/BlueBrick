@@ -61,39 +61,44 @@ namespace BlueBrick {
 	void Overlay::Draw() {
 		ImGui::NewFrame();
 
-		if (ImGui::BeginMainMenuBar()) {
-			if (ImGui::BeginMenu("BlueBrick")) {
-				ImGui::MenuItem("Show Logs", nullptr, &showLogs);
+		if (ImGui::IsKeyPressed(showHideKey))
+			isShowing = !isShowing;
 
-				ImGui::MenuItem("Show ImGui Demo", nullptr, &showDemoWindow);
+		if (isShowing) {
+			if (ImGui::BeginMainMenuBar()) {
+				if (ImGui::BeginMenu("BlueBrick")) {
+					ImGui::MenuItem("Show Logs", nullptr, &showLogs);
 
-				ImGui::Separator();
+					ImGui::MenuItem("Show ImGui Demo", nullptr, &showDemoWindow);
 
-				if (ImGui::MenuItem("Quit", "Alt + F4"))
-					std::exit(0);
+					ImGui::Separator();
 
-				ImGui::EndMenu();
-			}
+					if (ImGui::MenuItem("Quit", "Alt + F4"))
+						std::exit(0);
 
-			if (ImGui::BeginMenu("Bricks")) {
-				if (ImGui::MenuItem("Hello")) {
-
+					ImGui::EndMenu();
 				}
 
-				ImGui::EndMenu();
+				if (ImGui::BeginMenu("Bricks")) {
+					if (ImGui::MenuItem("Hello")) {
+
+					}
+
+					ImGui::EndMenu();
+				}
+
+				ImGui::EndMainMenuBar();
 			}
 
-			ImGui::EndMainMenuBar();
-		}
+			if (showLogs)
+				ShowLogs();
 
-		if (showLogs)
-			ShowLogs();
+			if (showDemoWindow)
+				ImGui::ShowDemoWindow(&showDemoWindow);
 
-		if (showDemoWindow)
-			ImGui::ShowDemoWindow(&showDemoWindow);
-
-		for (Mod* mod : ModLoader::instance().GetLoadedMods()) {
-			mod->OnDraw();
+			for (Mod* mod : ModLoader::instance().GetLoadedMods()) {
+				mod->OnDraw();
+			}
 		}
 
 		ImGui::EndFrame();

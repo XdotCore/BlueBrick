@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Logger/Color.hpp"
+#include "imgui.h"
 #include <string>
 #include <vector>
 #include <variant>
@@ -16,9 +17,7 @@ namespace BlueBrick {
 
 	private:
 		bool isShowing = true;
-
-		bool showBlueBrickMenu = false;
-		bool showBricksMenu = false;
+		ImGuiKey showHideKey = ImGuiKey_F3;
 
 		bool showDemoWindow = false;
 
