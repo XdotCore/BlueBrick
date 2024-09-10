@@ -8,3 +8,5 @@ target_include_directories(TestMod PRIVATE
 	"../../include/Universal/"
 	"../../imgui/"
 )
+
+	install(TARGETS TestMod RUNTIME DESTINATION "BlueBrick/Mods/")

@@ -61,8 +61,8 @@ namespace BlueBrick {
 			return result;
 		});
 
-		// get endscene for rendering
-		rcmp::hook_function<decltype(device->lpVtbl->EndScene)>(device->lpVtbl->EndScene, [this](auto original, IDirect3DDevice9* This) -> HRESULT {
+		// get present for rendering
+		rcmp::hook_function<decltype(device->lpVtbl->Present)>(device->lpVtbl->Present, [this](auto original, IDirect3DDevice9* This, const RECT* pSourceRect, const RECT* pDestRect, HWND hDestWindowOverride, const RGNDATA* pDirtyRegion) -> HRESULT {
 			if (!isSetUp) {
 				Device = This;
 				D3DDEVICE_CREATION_PARAMETERS params;
@@ -86,7 +86,7 @@ namespace BlueBrick {
 
 			ImGui_ImplDX9_RenderDrawData(ImGui::GetDrawData());
 
-			HRESULT result = original(This);
+			HRESULT result = original(This, pSourceRect, pDestRect, hDestWindowOverride, pDirtyRegion);
 
 			PostDraw();
 

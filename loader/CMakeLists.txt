@@ -124,6 +124,3 @@ install(CODE [[
 
 # install resources
 install(DIRECTORY fonts DESTINATION "BlueBrick/")
-if (COMPILE_TEST_MODS)
-	install(TARGETS TestMod RUNTIME DESTINATION "BlueBrick/Mods/")
-endif()

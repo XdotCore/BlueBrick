@@ -12,7 +12,7 @@ namespace BlueBrick {
 	/// </summary>
 	class BLUEBRICK_DLL Color final {
 	private:
-		bool isNone = false;
+		bool hasColor;
 		byte r, g, b;
 
 		friend class std::formatter<Color>;

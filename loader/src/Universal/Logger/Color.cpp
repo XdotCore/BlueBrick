@@ -3,7 +3,7 @@
 
 namespace BlueBrick {
 
-	bool Color::IsNone() const { return isNone; }
+	bool Color::IsNone() const { return !hasColor; }
 
 	int Color::GetRGB() const { return r + (g << 8) + (b << 16); }
 
@@ -16,22 +16,27 @@ namespace BlueBrick {
 	float Color::GetBFloat() const { return b / 255.f; }
 
 	Color::Color(int rgb) : 
+		hasColor(true),
 		r((byte)(rgb >> 16)),
 		g((byte)(rgb >> 8)),
 		b((byte)rgb) { }
 
 	Color::Color(byte r, byte g, byte b) :
+		hasColor(true),
 		r(r),
 		g(g),
 		b(b) { }
 
 	Color::Color(float rf, float gf, float bf) :
+		hasColor(true),
 		r((byte)(std::clamp(rf, 0.f, 1.f) * 255)),
 		g((byte)(std::clamp(gf, 0.f, 1.f) * 255)),
 		b((byte)(std::clamp(bf, 0.f, 1.f) * 255)) { }
 
 	std::string Color::Start() const {
-		return std::format("\x1b[38;2;{};{};{}m", (int)this->r, (int)this->g, (int)this->b);
+		if (hasColor)
+			return std::format("\x1b[38;2;{};{};{}m", (int)this->r, (int)this->g, (int)this->b);
+		return End();
 	}
 	
 	const std::string& Color::End() {
@@ -40,8 +45,8 @@ namespace BlueBrick {
 	}
 
 	const Color& Color::None() {
-		static const byte bytes[sizeof(Color)] = { 1 }; // first field is isNone
-		return *(Color*)&bytes;
+		static const byte none[sizeof(Color)] = {};
+		return *(Color*)&none;
 	}
 
 #pragma region web colors
