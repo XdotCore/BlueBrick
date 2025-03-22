@@ -1,6 +1,8 @@
 use std::{error::Error, mem};
 
+use colored::Colorize;
 use ctor::ctor;
+use logger::init_terminal;
 use retour::static_detour;
 
 pub mod hooking;
@@ -28,6 +30,9 @@ fn hook() -> Result<(), Box<dyn Error>> {
 
 #[ctor]
 fn hello() {
+    init_terminal();
+    println!("{}", "hello world! 🤡🍄🤯👨🏿🏳️‍🌈".red());
+
     if let Err(e) = hook() {
         msgbox::create("Error Loading BlueBrick", &format!("Problem hooking functions:\n{e:?}"), msgbox::IconType::Error);
     }
