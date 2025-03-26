@@ -1,13 +1,14 @@
+pub mod logger;
+pub mod memutils;
+pub mod overlay;
+
 use std::{error::Error, mem};
 
 use colored::Colorize;
 use ctor::ctor;
 use logger::init_terminal;
+use overlay::Overlay;
 use retour::static_detour;
-
-pub mod hooking;
-pub mod logger;
-pub mod memutils;
 
 static_detour! {
     static AddToCoins: unsafe extern "cdecl" fn(*mut u64, u64, i32, bool);
@@ -30,10 +31,18 @@ fn hook() -> Result<(), Box<dyn Error>> {
 
 #[ctor]
 fn hello() {
-    init_terminal();
+    msgbox::create("For debugging", "For debugging", msgbox::IconType::None);
+
+    if let Err(e) = init_terminal() {
+        msgbox::create("Error Starting Up BlueBrick", &format!("Problem starting terminal:\n{e:?}"), msgbox::IconType::Error);
+    }
     println!("{}", "hello world! 🤡🍄🤯👨🏿🏳️‍🌈".red());
 
+    if let Err(e) = Overlay::start() {
+        msgbox::create("Error Starting Up BlueBrick", &format!("Problem attaching imgui:\n{e:?}"), msgbox::IconType::Error);
+    }
+
     if let Err(e) = hook() {
-        msgbox::create("Error Loading BlueBrick", &format!("Problem hooking functions:\n{e:?}"), msgbox::IconType::Error);
+        msgbox::create("Error Starting Up BlueBrick", &format!("Problem hooking functions:\n{e:?}"), msgbox::IconType::Error);
     }
 }

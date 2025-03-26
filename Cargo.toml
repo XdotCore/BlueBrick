@@ -7,6 +7,8 @@ edition = "2024"
 colored = "3.0.0"
 ctor = "0.4.1"
 dlopen = "0.1.8"
+dlopen_derive = "0.1.4"
+imgui = { version = "0.12.0", features = ["docking"] }
 msgbox = "0.7.0"
 
 [dependencies.retour]
@@ -17,11 +19,24 @@ features = [
 ]
 
 [target.'cfg(windows)'.dependencies.windows]
-version = "0.60.0"
+version = "0.61.1"
 features = [
     "Win32_System_LibraryLoader",
-    "Win32_System_Console"
+    "Win32_System_Console",
+    "Win32_Graphics_Direct3D9",
+    "Win32_Graphics_Gdi",
+    "Win32_UI_WindowsAndMessaging"
 ]
+
+[target.'cfg(windows)'.dependencies]
+windows-numerics = "0.2.0"
+
+[build-dependencies]
+cc = "1.2.17"
 
 [lib]
 crate-type = [ "cdylib", "lib" ]
+
+[features]
+win32 = [ ]
+dx9 = [  ]
