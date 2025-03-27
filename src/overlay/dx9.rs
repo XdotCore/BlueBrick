@@ -6,21 +6,15 @@ use retour::static_detour;
 use std::{error::Error, ptr, sync::OnceLock};
 use windows::{
     Win32::{
-        Foundation::{HWND, LPARAM, LRESULT, RECT, WPARAM},
         Graphics::{Direct3D9::*, Gdi::RGNDATA},
-        UI::WindowsAndMessaging::{CallWindowProcA, DefWindowProcA, GWLP_WNDPROC, SetWindowLongPtrA, WA_ACTIVE, WM_ACTIVATE, WM_KEYFIRST, WM_KEYLAST, WM_KILLFOCUS, WM_MOUSEFIRST, WM_MOUSELAST, WM_SETFOCUS, WM_SYSKEYDOWN, WNDPROC},
+        Foundation::{HWND, RECT}
     },
-    core::{BOOL, HRESULT},
+    core::HRESULT,
 };
 
 use crate::overlay::OVERLAY_INSTANCE;
 
-// statically linked imgui backend functions
 unsafe extern "C" {
-    fn _ImGui_ImplWin32_Init(hwnd: HWND) -> bool;
-    fn _ImGui_ImplWin32_NewFrame();
-    fn _ImGui_ImplWin32_WndProcHandler(hWnd: HWND, msg: u32, wParam: WPARAM, lParam: LPARAM) -> BOOL;
-
     fn _ImGui_ImplDX9_Init(device: *mut *const IDirect3DDevice9_Vtbl) -> bool;
     fn _ImGui_ImplDX9_NewFrame();
     fn _ImGui_ImplDX9_RenderDrawData(draw_data: &imgui::DrawData);
@@ -43,44 +37,8 @@ static_detour! {
     static Direct3D9_Device_Present: unsafe extern "system" fn(*mut *const IDirect3DDevice9_Vtbl, *const RECT, *const RECT, HWND, *const RGNDATA) -> HRESULT;
 }
 
-static mut WINDOW: HWND = unsafe { std::mem::zeroed() };
 static mut PARAMS: D3DPRESENT_PARAMETERS = unsafe { std::mem::zeroed() };
 static mut DEVICE: *mut *const IDirect3DDevice9_Vtbl = ptr::null_mut();
-static mut TRUEWNDPROC: WNDPROC = None;
-
-fn FakeWndProc(hwnd: HWND, mut msg: u32, mut wparam: WPARAM, lparam: LPARAM) -> LRESULT {
-    unsafe {
-        let io = imgui::sys::igGetIO();
-
-        if _ImGui_ImplWin32_WndProcHandler(hwnd, msg, wparam, lparam).as_bool() {
-            return LRESULT(true as isize);
-        }
-
-        // eat message to disable mouse and keyboard passing through imgui
-        if ((*io).WantCaptureMouse && msg >= WM_MOUSEFIRST && msg <= WM_MOUSELAST) || ((*io).WantCaptureKeyboard && msg >= WM_KEYFIRST && msg <= WM_KEYLAST) {
-            return LRESULT(true as isize);
-        }
-
-        match msg {
-            // keep the game from not rendering
-            WM_ACTIVATE => {
-                wparam = WPARAM(WA_ACTIVE as usize);
-            }
-            WM_KILLFOCUS => {
-                msg = WM_SETFOCUS;
-            }
-
-            // allow alt f4
-            WM_SYSKEYDOWN => {
-                return DefWindowProcA(hwnd, msg, wparam, lparam);
-            }
-
-            _ => {}
-        }
-
-        return CallWindowProcA(TRUEWNDPROC, hwnd, msg, wparam, lparam);
-    }
-}
 
 fn hook_device(device: *const *const IDirect3DDevice9_Vtbl) {
     static CALL_ONLY_ONCE: OnceLock<()> = OnceLock::new();
@@ -120,16 +78,11 @@ fn hook_device(device: *const *const IDirect3DDevice9_Vtbl) {
                     DEVICE = this;
                     let mut params = Default::default();
                     let _ = ((**DEVICE).GetCreationParameters)(DEVICE.cast(), &mut params);
-                    WINDOW = params.hFocusWindow;
-
-                    TRUEWNDPROC = std::mem::transmute(SetWindowLongPtrA(WINDOW, GWLP_WNDPROC, std::mem::transmute(FakeWndProc as *const ())));
-
-                    //ImGui_ImplWin32_EnableDpiAwareness();
-                    _ImGui_ImplWin32_Init(WINDOW);
+                    super::win32::init_imgui_implwin32(params.hFocusWindow);
                     _ImGui_ImplDX9_Init(DEVICE);
                 });
 
-                _ImGui_ImplWin32_NewFrame();
+                super::win32::imgui_implwin32_new_frame();
                 _ImGui_ImplDX9_NewFrame();
 
                 let draw_data = (*OVERLAY_INSTANCE).draw();
@@ -165,7 +118,6 @@ fn hook_directx9(id3d9: *const *const IDirect3D9_Vtbl) {
             let real_create_device = std::mem::transmute(real_create_device);
 
             match Direct3D9_CreateDeviceHook.initialize(real_create_device, |this, adapter, device_type, focus_window, behavior_flags, presentation_parameters, returned_device_interface| {
-                WINDOW = focus_window;
                 PARAMS = *presentation_parameters;
 
                 let result = Direct3D9_CreateDeviceHook.call(this, adapter, device_type, focus_window, behavior_flags, presentation_parameters, returned_device_interface);
@@ -209,7 +161,7 @@ fn attach_hooks() -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
-pub fn init_imgui() -> Result<(), Box<dyn Error>> {
+pub fn init_imgui_impldx9() -> Result<(), Box<dyn Error>> {
     attach_hooks()?;
 
     Ok(())

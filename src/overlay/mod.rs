@@ -1,44 +1,53 @@
-#[cfg(all(feature = "win32", feature = "dx9"))]
-mod win32_dx9;
+mod dx9;
+mod win32;
 
 use std::{error::Error, path::PathBuf, ptr};
 
+use bluebrick_proxy_base::{Platform, Renderer};
 use imgui::{DrawData, Key};
-use win32_dx9::init_imgui;
+use dx9::init_imgui_impldx9;
 
 pub struct Overlay {
     imgui: imgui::Context,
+    #[allow(unused)] // for future use
+    platform: Platform,
+    #[allow(unused)] // for future use
+    renderer: Renderer,
     show_hide_key: Key,
-    is_showing: bool,
+    is_showing: bool
 }
 
-// there might be a better way to do this
 static mut OVERLAY_INSTANCE: *mut Overlay = ptr::null_mut();
 
 impl Overlay {
-    // TODO: add shutdown method
     // TODO: refactor all the unsafe innards
-    pub fn start() -> Result<(), Box<dyn Error>> {
-        if unsafe { OVERLAY_INSTANCE.is_null() } {
-            let mut imgui = imgui::Context::create();
-            imgui.style_mut().use_dark_colors();
+    pub fn start(platform: Platform, renderer: Renderer) -> Result<(), Box<dyn Error>> {
+        unsafe { OVERLAY_INSTANCE = Box::into_raw(Box::new(Self::new(platform, renderer))) };
 
-            imgui.set_ini_filename(Some(PathBuf::from("bluebrick/imgui.ini")));
-
-            // TODO: add docking
-
-            // TODO: add fonts
-
-            let overlay = Overlay { imgui, show_hide_key: Key::F3, is_showing: true };
-
-            unsafe {
-                OVERLAY_INSTANCE = Box::into_raw(Box::new(overlay));
-            };
-
-            init_imgui()?;
-        }
+        match renderer {
+            Renderer::DX9 => init_imgui_impldx9()
+        }?;
 
         Ok(())
+    }
+
+    fn new(platform: Platform, renderer: Renderer) -> Self {
+        let mut imgui = imgui::Context::create();
+        imgui.style_mut().use_dark_colors();
+
+        imgui.set_ini_filename(Some(PathBuf::from("bluebrick/imgui.ini")));
+
+        // TODO: add docking
+
+        // TODO: add fonts
+
+        Self {
+            imgui, 
+            platform,
+            renderer,
+            show_hide_key: Key::F3, 
+            is_showing: true
+        }
     }
 
     pub fn draw(&mut self) -> &DrawData {

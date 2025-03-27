@@ -5,11 +5,11 @@ edition = "2024"
 
 [dependencies]
 colored = "3.0.0"
-ctor = "0.4.1"
 dlopen = "0.1.8"
 dlopen_derive = "0.1.4"
 imgui = { version = "0.12.0", features = ["docking"] }
 msgbox = "0.7.0"
+bluebrick-proxy-base = { path = "../proxy-base/" }
 
 [dependencies.retour]
 version = "0.3.1"
@@ -36,7 +36,3 @@ cc = "1.2.17"
 
 [lib]
 crate-type = [ "cdylib", "lib" ]
-
-[features]
-win32 = [ ]
-dx9 = [  ]

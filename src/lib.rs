@@ -1,11 +1,11 @@
 pub mod logger;
-pub mod memutils;
-pub mod overlay;
+mod memutils;
+mod overlay;
 
 use std::{error::Error, mem};
 
+use bluebrick_proxy_base::{Platform, Renderer};
 use colored::Colorize;
-use ctor::ctor;
 use logger::init_terminal;
 use overlay::Overlay;
 use retour::static_detour;
@@ -29,20 +29,20 @@ fn hook() -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
-#[ctor]
-fn hello() {
-    msgbox::create("For debugging", "For debugging", msgbox::IconType::None);
+#[unsafe(no_mangle)]
+pub extern "C" fn start_bluebrick(platform: Platform, renderer: Renderer) {
+    let _ = msgbox::create("For debugging", "For debugging", msgbox::IconType::None);
 
     if let Err(e) = init_terminal() {
-        msgbox::create("Error Starting Up BlueBrick", &format!("Problem starting terminal:\n{e:?}"), msgbox::IconType::Error);
+        let _ = msgbox::create("Error Starting Up BlueBrick", &format!("Problem starting terminal:\n{e:?}"), msgbox::IconType::Error);
     }
     println!("{}", "hello world! 🤡🍄🤯👨🏿🏳️‍🌈".red());
 
-    if let Err(e) = Overlay::start() {
-        msgbox::create("Error Starting Up BlueBrick", &format!("Problem attaching imgui:\n{e:?}"), msgbox::IconType::Error);
+    if let Err(e) = Overlay::start(platform, renderer) {
+        let _ = msgbox::create("Error Starting Up BlueBrick", &format!("Problem attaching imgui:\n{e:?}"), msgbox::IconType::Error);
     }
 
     if let Err(e) = hook() {
-        msgbox::create("Error Starting Up BlueBrick", &format!("Problem hooking functions:\n{e:?}"), msgbox::IconType::Error);
+        let _ = msgbox::create("Error Starting Up BlueBrick", &format!("Problem hooking functions:\n{e:?}"), msgbox::IconType::Error);
     }
 }
