@@ -2,9 +2,10 @@
 
 use windows::{
     Win32::{
-        Foundation::{HWND, LPARAM, LRESULT, WPARAM}, UI::WindowsAndMessaging::{CallWindowProcA, DefWindowProcA, SetWindowLongPtrA, GWLP_WNDPROC, WA_ACTIVE, WM_ACTIVATE, WM_KEYFIRST, WM_KEYLAST, WM_KILLFOCUS, WM_MOUSEFIRST, WM_MOUSELAST, WM_SETFOCUS, WM_SYSKEYDOWN, WNDPROC}
+        Foundation::{HWND, LPARAM, LRESULT, WPARAM},
+        UI::WindowsAndMessaging::{CallWindowProcA, DefWindowProcA, GWLP_WNDPROC, SetWindowLongPtrA, WA_ACTIVE, WM_ACTIVATE, WM_KEYFIRST, WM_KEYLAST, WM_KILLFOCUS, WM_MOUSEFIRST, WM_MOUSELAST, WM_SETFOCUS, WM_SYSKEYDOWN, WNDPROC},
     },
-    core::BOOL
+    core::BOOL,
 };
 
 unsafe extern "C" {
@@ -61,5 +62,7 @@ pub fn init_imgui_implwin32(hwnd: HWND) {
 }
 
 pub fn imgui_implwin32_new_frame() {
-    unsafe { _ImGui_ImplWin32_NewFrame(); }
+    unsafe {
+        _ImGui_ImplWin32_NewFrame();
+    }
 }

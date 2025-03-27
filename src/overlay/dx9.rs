@@ -6,8 +6,8 @@ use retour::static_detour;
 use std::{error::Error, ptr, sync::OnceLock};
 use windows::{
     Win32::{
+        Foundation::{HWND, RECT},
         Graphics::{Direct3D9::*, Gdi::RGNDATA},
-        Foundation::{HWND, RECT}
     },
     core::HRESULT,
 };

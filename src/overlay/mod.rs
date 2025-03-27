@@ -4,8 +4,8 @@ mod win32;
 use std::{error::Error, path::PathBuf, ptr};
 
 use bluebrick_proxy_base::{Platform, Renderer};
-use imgui::{DrawData, Key};
 use dx9::init_imgui_impldx9;
+use imgui::{DrawData, Key};
 
 pub struct Overlay {
     imgui: imgui::Context,
@@ -14,7 +14,7 @@ pub struct Overlay {
     #[allow(unused)] // for future use
     renderer: Renderer,
     show_hide_key: Key,
-    is_showing: bool
+    is_showing: bool,
 }
 
 static mut OVERLAY_INSTANCE: *mut Overlay = ptr::null_mut();
@@ -25,7 +25,7 @@ impl Overlay {
         unsafe { OVERLAY_INSTANCE = Box::into_raw(Box::new(Self::new(platform, renderer))) };
 
         match renderer {
-            Renderer::DX9 => init_imgui_impldx9()
+            Renderer::DX9 => init_imgui_impldx9(),
         }?;
 
         Ok(())
@@ -42,11 +42,11 @@ impl Overlay {
         // TODO: add fonts
 
         Self {
-            imgui, 
+            imgui,
             platform,
             renderer,
-            show_hide_key: Key::F3, 
-            is_showing: true
+            show_hide_key: Key::F3,
+            is_showing: true,
         }
     }
 
