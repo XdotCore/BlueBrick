@@ -4,7 +4,7 @@ mod overlay;
 
 use std::{error::Error, mem};
 
-use bluebrick_proxy_base::{Platform, Renderer};
+use bluebrick_proxy_base::{RequestedPlatform, RequestedRenderer};
 use colored::Colorize;
 use logger::init_terminal;
 use overlay::Overlay;
@@ -30,7 +30,7 @@ fn hook() -> Result<(), Box<dyn Error>> {
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn start_bluebrick(platform: Platform, renderer: Renderer) {
+pub extern "C" fn start_bluebrick(platform: RequestedPlatform, renderer: RequestedRenderer) {
     let _ = msgbox::create("For debugging", "For debugging", msgbox::IconType::None);
 
     if let Err(e) = init_terminal() {

@@ -3,38 +3,69 @@ mod win32;
 
 use std::{error::Error, path::PathBuf, ptr};
 
-use bluebrick_proxy_base::{Platform, Renderer};
+use bluebrick_proxy_base::{RequestedPlatform, RequestedRenderer};
 use imgui::{Condition, DrawData, Key, StyleColor, StyleVar};
 
 pub struct Overlay {
     imgui: imgui::Context,
-    #[allow(unused)] // for future use
-    platform: Platform,
-    #[allow(unused)] // for future use
-    renderer: Renderer,
+    platform: Box<dyn Platform>,
+    #[allow(unused)] // for possible future use
+    renderer: Box<dyn Renderer>,
     show_hide_key: Key,
     is_showing: bool,
 }
 
 static mut OVERLAY_INSTANCE: *mut Overlay = ptr::null_mut();
 
+trait Backend {}
+
+trait Platform: Backend {
+    fn new_frame(&self);
+    fn set_window(&mut self, ptr: *mut ());
+}
+
+trait Renderer: Backend {}
+
+trait BackendHelper<B: BackendHelper<B> + Backend> {
+    fn cast(backend: &dyn Backend) -> &B {
+        unsafe { (ptr::from_ref(backend).cast::<B>()).as_ref().unwrap() }
+    }
+
+    fn get_overlay() -> &'static mut Overlay {
+        unsafe { &mut *OVERLAY_INSTANCE }
+    }
+}
+
+trait PlatformHelper<P: PlatformHelper<P> + Platform> : BackendHelper<P> {
+    fn get_instance() -> &'static P {
+        Self::cast(Self::get_overlay().platform.as_ref())
+    }
+}
+
+#[allow(unused)] // for possible future use
+trait RendererHelper<R: RendererHelper<R> + Renderer> : BackendHelper<R> {
+    fn get_instance() -> &'static R {
+        Self::cast(Self::get_overlay().renderer.as_ref())
+    }
+}
+
 impl Overlay {
     // TODO: clean and minimize the unsafe innards
-    pub fn start(platform: Platform, renderer: Renderer) -> Result<(), Box<dyn Error>> {
+    pub fn start(platform: RequestedPlatform, renderer: RequestedRenderer) -> Result<(), Box<dyn Error>> {
+        let platform = Box::new(match platform {
+            RequestedPlatform::Win32 => win32::Platform::new(),
+        }?);
+
+        let renderer = Box::new(match renderer {
+            RequestedRenderer::DX9 => dx9::Renderer::new(),
+        }?);
+
         unsafe { OVERLAY_INSTANCE = Box::into_raw(Box::new(Self::new(platform, renderer))) };
-
-        match platform {
-            Platform::Win32 => win32::init(),
-        }?;
-
-        match renderer {
-            Renderer::DX9 => dx9::init(),
-        }?;
 
         Ok(())
     }
 
-    fn new(platform: Platform, renderer: Renderer) -> Self {
+    fn new(platform: Box<dyn Platform>, renderer: Box<dyn Renderer>) -> Self {
         let mut imgui = imgui::Context::create();
         imgui.style_mut().use_dark_colors();
 

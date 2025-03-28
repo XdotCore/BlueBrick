@@ -16,6 +16,8 @@ use windows::{
     core::BOOL,
 };
 
+use super::PlatformHelper;
+
 unsafe extern "C" {
     fn _ImGui_ImplWin32_Init(hwnd: HWND) -> bool;
     fn _ImGui_ImplWin32_NewFrame();
@@ -35,84 +37,104 @@ static_detour! {
     static SetCursorPosHook: unsafe extern "system" fn (i32, i32) -> BOOL;
 }
 
-static mut WINDOW: HWND = unsafe { std::mem::zeroed() };
-static mut TRUEWNDPROC: WNDPROC = None;
+pub struct Platform {
+    window: HWND,
+    true_wndproc: WNDPROC,
+}
 
-fn FakeWndProc(hwnd: HWND, mut msg: u32, mut wparam: WPARAM, lparam: LPARAM) -> LRESULT {
-    unsafe {
-        let io = imgui::sys::igGetIO();
+impl Platform {
+    fn FakeWndProc(hwnd: HWND, mut msg: u32, mut wparam: WPARAM, lparam: LPARAM) -> LRESULT {
+        unsafe {
+            let io = imgui::sys::igGetIO();
 
-        if _ImGui_ImplWin32_WndProcHandler(hwnd, msg, wparam, lparam).as_bool() {
-            return LRESULT(true as isize);
+            if _ImGui_ImplWin32_WndProcHandler(hwnd, msg, wparam, lparam).as_bool() {
+                return LRESULT(true as isize);
+            }
+
+            // eat message to disable mouse and keyboard passing through imgui
+            if ((*io).WantCaptureMouse && msg >= WM_MOUSEFIRST && msg <= WM_MOUSELAST) || ((*io).WantCaptureKeyboard && msg >= WM_KEYFIRST && msg <= WM_KEYLAST) {
+                return LRESULT(true as isize);
+            }
+
+            match msg {
+                // keep the game from not rendering
+                WM_ACTIVATE => {
+                    wparam = WPARAM(WA_ACTIVE as usize);
+                }
+                WM_KILLFOCUS => {
+                    msg = WM_SETFOCUS;
+                }
+
+                // allow alt f4
+                WM_SYSKEYDOWN => {
+                    return DefWindowProcA(hwnd, msg, wparam, lparam);
+                }
+
+                _ => {}
+            }
+
+            CallWindowProcA(Self::get_instance().true_wndproc, hwnd, msg, wparam, lparam)
+        }
+    }
+
+    fn attach_hooks() -> Result<(), Box<dyn Error>> {
+        let cont = unsafe { Container::<User32Api>::load("user32.dll")? };
+
+        unsafe {
+            RegisterRawInputDevicesHook.initialize(cont.RegisterRawInputDevices, |raw_input_devices, num_devices, size| {
+                let unusable: RAWINPUTDEVICE_FLAGS = RIDEV_NOLEGACY | RIDEV_CAPTUREMOUSE | RIDEV_APPKEYS | RIDEV_NOHOTKEYS;
+                for input_device in from_raw_parts_mut(raw_input_devices, num_devices as usize) {
+                    input_device.dwFlags &= !unusable;
+                }
+                RegisterRawInputDevicesHook.call(raw_input_devices, num_devices, size)
+            })?;
+            RegisterRawInputDevicesHook.enable()?;
+
+            ShowCursorHook.initialize(cont.ShowCursor, |_| ShowCursorHook.call(TRUE))?;
+            ShowCursorHook.enable()?;
+
+            SetCursorPosHook.initialize(cont.SetCursorPos, |_, _| FALSE)?;
+            SetCursorPosHook.enable()?;
         }
 
-        // eat message to disable mouse and keyboard passing through imgui
-        if ((*io).WantCaptureMouse && msg >= WM_MOUSEFIRST && msg <= WM_MOUSELAST) || ((*io).WantCaptureKeyboard && msg >= WM_KEYFIRST && msg <= WM_KEYLAST) {
-            return LRESULT(true as isize);
+        Ok(())
+    }
+
+    fn init() -> Result<(), Box<dyn Error>> {
+        Self::attach_hooks()?;
+
+        Ok(())
+    }
+
+    pub fn new() -> Result<Self, Box<dyn Error>> {
+        Self::init()?;
+        Ok(Self { window: Default::default(), true_wndproc: None })
+    }
+}
+
+impl super::Backend for Platform {}
+
+impl super::Platform for Platform {
+    fn new_frame(&self) {
+        unsafe {
+            _ImGui_ImplWin32_NewFrame();
         }
+    }
 
-        match msg {
-            // keep the game from not rendering
-            WM_ACTIVATE => {
-                wparam = WPARAM(WA_ACTIVE as usize);
-            }
-            WM_KILLFOCUS => {
-                msg = WM_SETFOCUS;
+    fn set_window(&mut self, ptr: *mut ()) {
+        unsafe {
+            if !self.window.is_invalid() && self.true_wndproc.is_some() {
+                SetWindowLongPtrA(self.window, GWLP_WNDPROC, self.true_wndproc.unwrap() as *const () as _);
             }
 
-            // allow alt f4
-            WM_SYSKEYDOWN => {
-                return DefWindowProcA(hwnd, msg, wparam, lparam);
-            }
+            self.window = HWND(ptr.cast());
 
-            _ => {}
+            self.true_wndproc = std::mem::transmute(SetWindowLongPtrA(self.window, GWLP_WNDPROC, Self::FakeWndProc as *const () as _));
+
+            _ImGui_ImplWin32_Init(self.window);
         }
-
-        return CallWindowProcA(TRUEWNDPROC, hwnd, msg, wparam, lparam);
     }
 }
 
-pub fn set_window(hwnd: HWND) {
-    unsafe {
-        WINDOW = hwnd;
-
-        TRUEWNDPROC = std::mem::transmute(SetWindowLongPtrA(WINDOW, GWLP_WNDPROC, FakeWndProc as *const () as _));
-
-        _ImGui_ImplWin32_Init(super::win32::WINDOW);
-    }
-}
-
-pub fn new_frame() {
-    unsafe {
-        _ImGui_ImplWin32_NewFrame();
-    }
-}
-
-fn attach_hooks() -> Result<(), Box<dyn Error>> {
-    let cont = unsafe { Container::<User32Api>::load("user32.dll")? };
-
-    unsafe {
-        RegisterRawInputDevicesHook.initialize(cont.RegisterRawInputDevices, |raw_input_devices, num_devices, size| {
-            let unusable: RAWINPUTDEVICE_FLAGS = RIDEV_NOLEGACY | RIDEV_CAPTUREMOUSE | RIDEV_APPKEYS | RIDEV_NOHOTKEYS;
-            for input_device in from_raw_parts_mut(raw_input_devices, num_devices as usize) {
-                input_device.dwFlags &= !unusable;
-            }
-            RegisterRawInputDevicesHook.call(raw_input_devices, num_devices, size)
-        })?;
-        RegisterRawInputDevicesHook.enable()?;
-
-        ShowCursorHook.initialize(cont.ShowCursor, |_| ShowCursorHook.call(TRUE))?;
-        ShowCursorHook.enable()?;
-
-        SetCursorPosHook.initialize(cont.SetCursorPos, |_, _| FALSE)?;
-        SetCursorPosHook.enable()?;
-    }
-
-    Ok(())
-}
-
-pub fn init() -> Result<(), Box<dyn Error>> {
-    attach_hooks()?;
-
-    Ok(())
-}
+impl super::BackendHelper<Self> for Platform {}
+impl super::PlatformHelper<Self> for Platform {}
