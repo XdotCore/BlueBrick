@@ -4,8 +4,7 @@ mod win32;
 use std::{error::Error, path::PathBuf, ptr};
 
 use bluebrick_proxy_base::{Platform, Renderer};
-use dx9::init_imgui_impldx9;
-use imgui::{DrawData, Key};
+use imgui::{Condition, DrawData, Key, StyleColor, StyleVar};
 
 pub struct Overlay {
     imgui: imgui::Context,
@@ -20,12 +19,16 @@ pub struct Overlay {
 static mut OVERLAY_INSTANCE: *mut Overlay = ptr::null_mut();
 
 impl Overlay {
-    // TODO: refactor all the unsafe innards
+    // TODO: clean and minimize the unsafe innards
     pub fn start(platform: Platform, renderer: Renderer) -> Result<(), Box<dyn Error>> {
         unsafe { OVERLAY_INSTANCE = Box::into_raw(Box::new(Self::new(platform, renderer))) };
 
+        match platform {
+            Platform::Win32 => win32::init(),
+        }?;
+
         match renderer {
-            Renderer::DX9 => init_imgui_impldx9(),
+            Renderer::DX9 => dx9::init(),
         }?;
 
         Ok(())
@@ -60,6 +63,13 @@ impl Overlay {
         if self.is_showing {
             ui.show_demo_window(&mut true);
         }
+
+        ui.window("hello").size([700.0, 700.0], Condition::FirstUseEver).build(|| {
+            let _spacing = ui.push_style_var(StyleVar::ItemSpacing([0.0, 2.0]));
+            let _color = ui.push_style_color(StyleColor::Text, imgui::color::ImColor32::from_rgb(0xd1, 0x79, 0x15).to_rgba_f32s());
+            ui.text("Hello");
+            ui.text("World!");
+        });
 
         ui.end_frame_early();
         self.imgui.render()

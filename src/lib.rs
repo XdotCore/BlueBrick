@@ -37,6 +37,7 @@ pub extern "C" fn start_bluebrick(platform: Platform, renderer: Renderer) {
         let _ = msgbox::create("Error Starting Up BlueBrick", &format!("Problem starting terminal:\n{e:?}"), msgbox::IconType::Error);
     }
     println!("{}", "hello world! 🤡🍄🤯👨🏿🏳️‍🌈".red());
+    // TODO: replace all msgbox from recoverable errors with messages to the log
 
     if let Err(e) = Overlay::start(platform, renderer) {
         let _ = msgbox::create("Error Starting Up BlueBrick", &format!("Problem attaching imgui:\n{e:?}"), msgbox::IconType::Error);
