@@ -31,6 +31,7 @@ trait BackendHelper<B: BackendHelper<B> + Backend> {
         unsafe { (ptr::from_ref(backend).cast::<B>()).as_ref().unwrap() }
     }
 
+    // TODO: make thread safe if it ever becomes worth it
     fn get_overlay() -> &'static mut Overlay {
         unsafe { &mut *OVERLAY_INSTANCE }
     }
