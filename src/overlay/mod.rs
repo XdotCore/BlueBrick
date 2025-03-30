@@ -66,6 +66,7 @@ impl Overlay {
                 size_pixels: FONT_SIZE,
                 config: Some(FontConfig {
                     glyph_ranges: font_range.clone(),
+                    name: Some(String::from("Cascadia Code")),
                     ..Default::default()
                 }),
             },
@@ -77,6 +78,7 @@ impl Overlay {
                     oversample_v: 1,
                     font_builder_flags: imgui::sys::ImGuiFreeTypeBuilderFlags_LoadColor,
                     glyph_ranges: font_range.clone(),
+                    name: Some(String::from("Fluent UI Emoji Flat")),
                     ..Default::default()
                 })
             }
@@ -89,6 +91,7 @@ impl Overlay {
             config: Some(FontConfig {
                 font_builder_flags: imgui::sys::ImGuiFreeTypeBuilderFlags_Bold,
                 glyph_ranges: font_range.clone(),
+                name: Some(String::from("Cascadia Code Bold")),
                 ..Default::default()
             })
         }]);
@@ -99,6 +102,7 @@ impl Overlay {
             size_pixels: FONT_SIZE,
             config: Some(FontConfig {
                 glyph_ranges: font_range.clone(),
+                name: Some(String::from("Cascadia Code Italic")),
                 ..Default::default()
             })
         }]);
@@ -110,6 +114,7 @@ impl Overlay {
             config: Some(FontConfig {
                 font_builder_flags: imgui::sys::ImGuiFreeTypeBuilderFlags_Bold,
                 glyph_ranges: font_range.clone(),
+                name: Some(String::from("Cascadia Code Bold + Italic")),
                 ..Default::default()
             })
         }]);
