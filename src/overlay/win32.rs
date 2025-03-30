@@ -73,7 +73,7 @@ impl Platform {
                 _ => {}
             }
 
-            CallWindowProcA(Self::get_instance().true_wndproc, hwnd, msg, wparam, lparam)
+            CallWindowProcA(Self::instance().true_wndproc, hwnd, msg, wparam, lparam)
         }
     }
 

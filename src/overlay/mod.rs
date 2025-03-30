@@ -3,7 +3,7 @@ mod win32;
 
 use std::{error::Error, path::PathBuf, ptr};
 
-use bluebrick_proxy_base::{RequestedPlatform, RequestedRenderer};
+use bluebrick_proxy_base::{Config, RequestedPlatform, RequestedRenderer};
 use imgui::{ConfigFlags, DrawData, FontConfig, FontGlyphRanges, FontSource, Key};
 
 pub struct Overlay {
@@ -17,25 +17,16 @@ pub struct Overlay {
     show_logs: bool
 }
 
-static mut OVERLAY_INSTANCE: *mut Overlay = ptr::null_mut();
-
 impl Overlay {
-    // TODO: clean and minimize the unsafe innards
-    pub fn start(platform: RequestedPlatform, renderer: RequestedRenderer) -> Result<(), Box<dyn Error>> {
-        let platform = Box::new(match platform {
+    pub fn new(config: Config) -> Result<Self, Box<dyn Error>> {
+        let platform = Box::new(match config.platform {
             RequestedPlatform::Win32 => win32::Platform::new(),
         }?);
 
-        let renderer = Box::new(match renderer {
+        let renderer = Box::new(match config.renderer {
             RequestedRenderer::DX9 => dx9::Renderer::new(),
         }?);
 
-        unsafe { OVERLAY_INSTANCE = Box::into_raw(Box::new(Self::new(platform, renderer))) };
-
-        Ok(())
-    }
-
-    fn new(platform: Box<dyn Platform>, renderer: Box<dyn Renderer>) -> Self {
         let mut imgui = imgui::Context::create();
         imgui.style_mut().use_dark_colors();
 
@@ -45,7 +36,7 @@ impl Overlay {
 
         Self::add_fonts(&mut imgui);
 
-        Self {
+        Ok(Self {
             imgui,
             platform,
             renderer,
@@ -53,7 +44,7 @@ impl Overlay {
             is_showing: true,
             show_demo_window: false,
             show_logs: false
-        }
+        })
     }
 
     fn add_fonts(imgui: &mut imgui::Context) {
@@ -184,21 +175,20 @@ trait BackendHelper<B: BackendHelper<B> + Backend> {
         unsafe { (ptr::from_ref(backend).cast::<B>()).as_ref().unwrap() }
     }
 
-    // TODO: make thread safe if it ever becomes worth it
     fn get_overlay() -> &'static mut Overlay {
-        unsafe { &mut *OVERLAY_INSTANCE }
+        &mut super::BlueBrick::instance().overlay
     }
 }
 
 trait PlatformHelper<P: PlatformHelper<P> + Platform> : BackendHelper<P> {
-    fn get_instance() -> &'static P {
+    fn instance() -> &'static P {
         Self::cast(Self::get_overlay().platform.as_ref())
     }
 }
 
 #[allow(unused)] // for possible future use
 trait RendererHelper<R: RendererHelper<R> + Renderer> : BackendHelper<R> {
-    fn get_instance() -> &'static R {
+    fn instance() -> &'static R {
         Self::cast(Self::get_overlay().renderer.as_ref())
     }
 }
