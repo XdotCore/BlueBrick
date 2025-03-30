@@ -3,8 +3,9 @@ mod win32;
 
 use std::{error::Error, path::PathBuf, ptr};
 
-use bluebrick_proxy_base::{Config, RequestedPlatform, RequestedRenderer};
 use imgui::{ConfigFlags, DrawData, FontConfig, FontGlyphRanges, FontSource, Key};
+
+use crate::proxy::{Config, RequestedPlatform, RequestedRenderer};
 
 pub struct Overlay {
     imgui: imgui::Context,

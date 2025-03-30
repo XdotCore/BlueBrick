@@ -1,11 +1,12 @@
 pub mod logger;
 mod memutils;
 mod overlay;
+pub mod proxy;
 
 use std::{error::Error, mem, ptr};
 
-use bluebrick_proxy_base::Config;
 use colored::Colorize;
+use proxy::Config;
 use logger::init_terminal;
 use overlay::Overlay;
 use retour::static_detour;
