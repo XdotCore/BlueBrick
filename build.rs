@@ -1,19 +1,31 @@
-fn add_backend_to_files(files: &mut Vec<String>, backend: &str) {
-    let c = format!("src/overlay/imgui_impl_{backend}.cpp");
-    let cpp = format!("src/overlay/imgui/backends/imgui_impl_{backend}.cpp");
+fn add_file(files: &mut Vec<String>, file_path: &str) {
+    println!("cargo:rerun-if-changes={file_path}");
+    files.push(String::from(file_path));
+}
 
-    println!("cargo:rerun-if-changed={c}");
-    println!("cargo:rerun-if-changed={cpp}");
+fn add_imgui_files(files: &mut Vec<String>, file_name: &str, imgui_folder: &str) {
+    let c = format!("src/overlay/{file_name}.cpp");
+    let cpp = format!("src/overlay/imgui/{imgui_folder}/{file_name}.cpp");
 
-    files.push(c);
-    files.push(cpp);
+    add_file(files, &c);
+    add_file(files, &cpp);
+}
+
+fn build_imgui_parts() {
+    let mut files = Vec::new();
+
+    add_imgui_files(&mut files, "imgui_impl_win32", "backends");
+    add_imgui_files(&mut files, "imgui_impl_dx9", "backends");
+
+    cc::Build::new()
+        .files(files)
+        .include("src/overlay/imgui/")
+        .cpp(true)
+        .compile("imgui");
+
+	
 }
 
 fn main() {
-    let mut files = Vec::new();
-
-    add_backend_to_files(&mut files, "win32");
-    add_backend_to_files(&mut files, "dx9");
-
-    cc::Build::new().files(files).include("src/overlay/imgui/").cpp(true).compile("imgui");
+    build_imgui_parts();
 }
