@@ -4,7 +4,7 @@ mod win32;
 use std::{error::Error, path::PathBuf, ptr};
 
 use bluebrick_proxy_base::{RequestedPlatform, RequestedRenderer};
-use imgui::{Condition, DrawData, FontConfig, FontGlyphRanges, FontSource, Key, StyleColor, StyleVar};
+use imgui::{DrawData, FontConfig, FontGlyphRanges, FontSource, Key};
 
 pub struct Overlay {
     imgui: imgui::Context,
@@ -13,6 +13,8 @@ pub struct Overlay {
     renderer: Box<dyn Renderer>,
     show_hide_key: Key,
     is_showing: bool,
+    show_demo_window: bool,
+    show_logs: bool
 }
 
 static mut OVERLAY_INSTANCE: *mut Overlay = ptr::null_mut();
@@ -49,6 +51,8 @@ impl Overlay {
             renderer,
             show_hide_key: Key::F3,
             is_showing: true,
+            show_demo_window: false,
+            show_logs: false
         }
     }
 
@@ -128,15 +132,36 @@ impl Overlay {
         }
 
         if self.is_showing {
-            ui.show_demo_window(&mut true);
-        }
+            
+            ui.main_menu_bar(|| {
+                ui.menu("Blue Brick", || {
+                    ui.menu_item_config("Show Logs").build_with_ref(&mut self.show_logs);
 
-        ui.window("hello").size([700.0, 700.0], Condition::FirstUseEver).build(|| {
-            let _spacing = ui.push_style_var(StyleVar::ItemSpacing([0.0, 2.0]));
-            let _color = ui.push_style_color(StyleColor::Text, imgui::color::ImColor32::from_rgb(0xd1, 0x79, 0x15).to_rgba_f32s());
-            ui.text("Hello");
-            ui.text("World! 🤯🍄");
-        });
+                    ui.menu_item_config("Show ImGui Demo").build_with_ref(&mut self.show_demo_window);
+
+                    ui.separator();
+
+                    if ui.menu_item_config("Quit").shortcut("Alt + F4").build() {
+                        // TODO: ask are you sure
+                        std::process::exit(0);
+                    }
+                });
+
+                ui.menu("Bricks", || {
+                    if ui.menu_item("Hello")  {
+
+                    }
+                });
+            });
+
+            if self.show_logs {
+
+            }
+
+            if self.show_demo_window {
+                ui.show_demo_window(&mut self.show_demo_window);
+            }
+        }
 
         ui.end_frame_early();
         self.imgui.render()
