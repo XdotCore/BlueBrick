@@ -7,7 +7,8 @@ edition = "2024"
 colored = "3.0.0"
 dlopen = "0.1.8"
 dlopen_derive = "0.1.4"
-imgui = { version = "0.12.0", features = ["docking"] }
+imgui = { git="https://github.com/XdotCore/imgui-rs", features = ["docking", "freetype"] }
+imgui-sys = { git="https://github.com/XdotCore/imgui-rs", features = ["docking", "freetype", "lunasvg", "use-git"] }
 msgbox = "0.7.0"
 bluebrick-proxy-base = { path = "../proxy-base/" }
 
