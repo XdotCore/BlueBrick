@@ -4,7 +4,7 @@ mod win32;
 use std::{error::Error, path::PathBuf, ptr};
 
 use bluebrick_proxy_base::{RequestedPlatform, RequestedRenderer};
-use imgui::{DrawData, FontConfig, FontGlyphRanges, FontSource, Key};
+use imgui::{ConfigFlags, DrawData, FontConfig, FontGlyphRanges, FontSource, Key};
 
 pub struct Overlay {
     imgui: imgui::Context,
@@ -41,7 +41,7 @@ impl Overlay {
 
         imgui.set_ini_filename(Some(PathBuf::from("bluebrick/imgui.ini")));
 
-        // TODO: add docking
+        imgui.io_mut().config_flags |= ConfigFlags::DOCKING_ENABLE;
 
         Self::add_fonts(&mut imgui);
 
