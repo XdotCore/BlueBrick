@@ -3,9 +3,10 @@ mod win32;
 
 use std::{error::Error, path::PathBuf, ptr};
 
-use imgui::{ConfigFlags, DrawData, FontConfig, FontGlyphRanges, FontSource, Key};
+use colored::Color;
+use imgui::{Condition, ConfigFlags, DrawData, FontConfig, FontGlyphRanges, FontSource, Key, StyleColor, StyleVar, Ui};
 
-use crate::proxy::{Config, RequestedPlatform, RequestedRenderer};
+use crate::{logger::{LogItem, Logger}, proxy::{Config, RequestedPlatform, RequestedRenderer}, MainLogger};
 
 pub struct Overlay {
     imgui: imgui::Context,
@@ -123,6 +124,10 @@ impl Overlay {
             self.is_showing = !self.is_showing;
         }
 
+        if ui.is_key_down(Key::T) {
+            MainLogger::instance().log("test");
+        }
+
         if self.is_showing {
             
             ui.main_menu_bar(|| {
@@ -147,7 +152,7 @@ impl Overlay {
             });
 
             if self.show_logs {
-
+                Self::show_logs(ui);
             }
 
             if self.show_demo_window {
@@ -157,6 +162,31 @@ impl Overlay {
 
         ui.end_frame_early();
         self.imgui.render()
+    }
+
+    fn show_logs(ui: &Ui) {
+        ui.window("Log Window").size([700.0, 650.0], Condition::FirstUseEver).horizontal_scrollbar(true).build(|| {
+            let _spacing = ui.push_style_var(StyleVar::ItemSpacing([0.0, 0.2]));
+
+            let mut _current_color = None;
+            for item in &MainLogger::instance().log_items {
+                match item {
+                    LogItem::Text(msg) => {
+                        ui.text(msg);
+                        ui.same_line();
+                    }
+                    LogItem::NewLine => ui.text(""), // better than new_line() because it can stack multiple new lines
+                    LogItem::Color(color) => _current_color = Some(ui.push_style_color(StyleColor::Text, color_to_f32_4(*color))),
+                    LogItem::StyleReset => _current_color = None,
+                }
+            }
+
+            // scroll to end, including logic for the scrollbar covering part of the window
+            if MainLogger::instance().log_scroll_changed && (ui.scroll_y() + ui.clone_style().scrollbar_size) >= ui.scroll_max_y() {
+                ui.set_scroll_here_y_with_ratio(1.0);
+                MainLogger::instance().log_scroll_changed = false;
+            }
+        });
     }
 
     pub fn post_draw(&self) {}
@@ -191,5 +221,32 @@ trait PlatformHelper<P: PlatformHelper<P> + Platform> : BackendHelper<P> {
 trait RendererHelper<R: RendererHelper<R> + Renderer> : BackendHelper<R> {
     fn instance() -> &'static R {
         Self::cast(Self::get_overlay().renderer.as_ref())
+    }
+}
+
+fn u8_to_f32(byte: u8) -> f32 {
+    byte as f32 / u8::MAX as f32
+}
+
+fn color_to_f32_4(color: Color) -> [f32; 4] {
+    use Color::*;
+    match color {
+        Black => [0.0, 0.0, 0.0, 1.0 ],
+        Red => [205.0, 0.0, 0.0, 1.0 ],
+        Green => [0.0, 205.0, 0.0, 1.0 ],
+        Yellow => [205.0, 205.0, 0.0, 1.0 ],
+        Blue => [0.0, 0.0, 238.0, 1.0 ],
+        Magenta => [205.0, 0.0, 205.0, 1.0 ],
+        Cyan => [0.0, 205.0, 205.0, 1.0 ],
+        White => [229.0, 229.0, 229.0, 1.0 ],
+        BrightBlack => [127.0, 127.0, 127.0, 1.0 ],
+        BrightRed => [255.0, 0.0, 0.0, 1.0 ],
+        BrightGreen => [0.0, 255.0, 0.0, 1.0 ],
+        BrightYellow => [255.0, 255.0, 0.0, 1.0 ],
+        BrightBlue => [92.0, 92.0, 255.0, 1.0 ],
+        BrightMagenta => [255.0, 0.0, 255.0, 1.0 ],
+        BrightCyan => [0.0, 255.0, 255.0, 1.0 ],
+        BrightWhite => [255.0, 255.0, 255.0, 1.0 ],
+        TrueColor { r, g, b } => [u8_to_f32(r), u8_to_f32(g), u8_to_f32(b), 1.0],
     }
 }

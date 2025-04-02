@@ -7,7 +7,7 @@ use std::{error::Error, mem, ptr};
 
 use colored::Colorize;
 use proxy::Config;
-use logger::init_terminal;
+use logger::{MainLogger, Logger};
 use overlay::Overlay;
 use retour::static_detour;
 
@@ -31,46 +31,53 @@ fn hook() -> Result<(), Box<dyn Error>> {
 }
 
 struct BlueBrick {
-    overlay: overlay::Overlay
+    overlay: Overlay,
+    main_logger: MainLogger
 }
 
 impl BlueBrick {
-    // TODO: make thread safe if it ever becomes worth it
     fn get_or_init(config: Option<Config>) -> &'static mut BlueBrick {
         static mut INSTANCE: *mut BlueBrick = ptr::null_mut();
-        match config {
-            Some(config) => {
-                if let Err(e) = init_terminal() {
-                    let msg = &format!("Problem starting terminal:\n{e:?}");
-                    let _ = msgbox::create("Error Starting Up BlueBrick", msg, msgbox::IconType::Error);
-                    panic!("{msg}");
-                }
-                println!("{}", "hello world! 🤡🍄🤯👨🏿🏳️‍🌈".red());
-                // TODO: replace all msgbox from recoverable errors with messages to the log
+        if unsafe { INSTANCE.is_null() }  {
+            match config {
+                Some(config) => {
+                    let mut main_logger = match MainLogger::new() {
+                        Ok(main_logger) => main_logger,
+                        Err(e) => {
+                            let msg = &format!("Problem starting terminal:\n{e:?}");
+                            let _ = msgbox::create("Error Starting Up BlueBrick", msg, msgbox::IconType::Error);
+                            panic!("{msg}");
+                        }
+                    };
+                    main_logger.log(&format!("{}", "hello world! \n🤡🍄🤯👨🏿🏳️‍🌈aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa".red()));
+                    main_logger.log_warning("WANRING");
+                    main_logger.log_debug("DEBUGUG");
+                    main_logger.log_error("ERROR RORR RORROR");
+                    // TODO: replace all msgbox from recoverable errors with messages to the log
 
-                let overlay = match Overlay::new(config) {
-                    Ok(overlay) => overlay,
-                    Err(e) => {
-                        let msg = &format!("Problem attaching imgui:\n{e:?}");
+                    let overlay = match Overlay::new(config) {
+                        Ok(overlay) => overlay,
+                        Err(e) => {
+                            let msg = &format!("Problem attaching imgui:\n{e:?}");
+                            let _ = msgbox::create("Error Starting Up BlueBrick", msg, msgbox::IconType::Error);
+                            panic!("{msg}");
+                        }
+                    };
+
+                    if let Err(e) = hook() {
+                        let msg = &format!("Problem hooking functions:\n{e:?}");
                         let _ = msgbox::create("Error Starting Up BlueBrick", msg, msgbox::IconType::Error);
                         panic!("{msg}");
                     }
-                };
 
-                if let Err(e) = hook() {
-                    let msg = &format!("Problem hooking functions:\n{e:?}");
-                    let _ = msgbox::create("Error Starting Up BlueBrick", msg, msgbox::IconType::Error);
-                    panic!("{msg}");
+                    unsafe {
+                        INSTANCE = Box::into_raw(Box::new(BlueBrick {
+                            overlay,
+                            main_logger
+                        }));
+                    }
                 }
-
-                unsafe {
-                    INSTANCE = Box::into_raw(Box::new(BlueBrick {
-                        overlay
-                    }));
-                }
-            }
-            None => {
-                if unsafe { INSTANCE.is_null() } {
+                None => {
                     let msg = "Attempted to use BlueBrick before it is initialized";
                     let _ = msgbox::create("Failed to get BlueBrick instance", msg, msgbox::IconType::Error);
                     panic!("{msg}");
@@ -86,7 +93,7 @@ impl BlueBrick {
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn start_bluebrick(config: Config) {
+extern "C" fn start_bluebrick(config: Config) {
     let _ = msgbox::create("For debugging", "For debugging", msgbox::IconType::None);
 
     BlueBrick::get_or_init(Some(config));

@@ -4,6 +4,7 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
+chrono = "0.4.40"
 colored = "3.0.0"
 dlopen = "0.1.8"
 dlopen_derive = "0.1.4"
@@ -12,6 +13,7 @@ imgui-sys = { git="https://github.com/XdotCore/imgui-rs", features = ["docking",
 #imgui = { path="../../imgui-rs/imgui", features = ["docking", "freetype"] }
 #imgui-sys = { path="../../imgui-rs/imgui-sys", features = ["docking", "freetype", "lunasvg", "use-git"] }
 msgbox = "0.7.0"
+regex = "1.11.1"
 
 [dependencies.retour]
 version = "0.3.1"
@@ -38,4 +40,4 @@ windows-numerics = "0.2.0"
 cc = "1.2.17"
 
 [lib]
-crate-type = [ "cdylib", "lib" ]
+crate-type = [ "cdylib", "rlib" ]

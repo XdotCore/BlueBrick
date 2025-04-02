@@ -1,12 +1,12 @@
 use windows::{
-    Win32::{Foundation::HANDLE, System::Console},
+    Win32::System::Console,
     core::{Error, Result},
 };
 
 fn enable_color() -> Result<()> {
     unsafe {
         let output_handle = Console::GetStdHandle(Console::STD_OUTPUT_HANDLE)?;
-        if output_handle == HANDLE::default() {
+        if output_handle.is_invalid() {
             return Err(Error::from_win32());
         }
 
