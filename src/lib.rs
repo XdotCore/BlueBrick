@@ -53,6 +53,7 @@ impl BlueBrick {
                     main_logger.log_warning("WANRING");
                     main_logger.log_debug("DEBUGUG");
                     main_logger.log_error("ERROR RORR RORROR");
+                    log!(main_logger, "{}, {}", 69, 420);
                     // TODO: replace all msgbox from recoverable errors with messages to the log
 
                     let overlay = match Overlay::new(config) {

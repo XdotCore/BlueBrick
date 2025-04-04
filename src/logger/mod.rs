@@ -18,6 +18,7 @@ pub enum Severity {
     Error
 }
 
+// TODO: add documentation
 pub trait Logger {
     fn log_with_severity(&mut self, msg: &str, severity: Severity);
     
@@ -35,6 +36,34 @@ pub trait Logger {
 
     fn log_error(&mut self, msg: &str) {
         self.log_with_severity(msg, Severity::Error);
+    }
+}
+
+#[macro_export]
+macro_rules! log {
+    ($dst:expr, $($arg:tt)*) => {
+        $dst.log(&format!($($arg)*));
+    }
+}
+
+#[macro_export]
+macro_rules! log_debug {
+    ($dst:expr, $($arg:tt)*) => {
+        $dst.log_debug(&format!($($arg)*));
+    }
+}
+
+#[macro_export]
+macro_rules! log_warning {
+    ($dst:expr, $($arg:tt)*) => {
+        $dst.log_warning(&format!($($arg)*));
+    }
+}
+
+#[macro_export]
+macro_rules! log_error {
+    ($dst:expr, $($arg:tt)*) => {
+        $dst.log_error(&format!($($arg)*));
     }
 }
 
@@ -150,11 +179,12 @@ impl MainLogger {
     fn parse_color_txt(color_txt: &str) -> Option<LogItem> {
         let mut color = None;
 
-        let nums = color_txt.split(';').map(|n| n.parse::<u32>().unwrap().try_into().unwrap_or(255)).collect::<Vec<_>>();
+        let nums = color_txt.split(';').map(|n| n.parse::<u8>().unwrap_or_default()).collect::<Vec<_>>();
 
         let mut i = 0;
         while i < nums.len() {
             let mut matched = true;
+
             match nums[i] {
                 0 => color = Some(LogItem::StyleReset),
                 30 => color = Some(LogItem::Color(Color::Black)),
@@ -181,7 +211,6 @@ impl MainLogger {
             }
 
             if i + 4 < nums.len() {
-                matched = true;
                 match nums[i..i + 5] {
                     [38, 2, r, g, b] => color = Some(LogItem::Color(Color::TrueColor { r, g, b })),
                     _ => matched = false,
