@@ -112,21 +112,7 @@ impl BlueBrick {
     }
 }
 
-#[derive(Debug)]
-struct A {}
-
-impl Error for A {}
-
-impl fmt::Display for A {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "hello")
-    }
-}
-
 #[unsafe(no_mangle)]
 extern "C" fn start_bluebrick(config: Config) {
     let _ = BlueBrick::get_or_init(Some(config));
-
-    let e = StartupErr::Terminal(Box::new(A {}));
-    log_error!(MainLogger::instance(), "{e}");  
 }

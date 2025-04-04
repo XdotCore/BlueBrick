@@ -209,6 +209,7 @@ impl MainLogger {
                 i += 1;
                 continue;
             }
+            matched = true;
 
             if i + 4 < nums.len() {
                 match nums[i..i + 5] {
