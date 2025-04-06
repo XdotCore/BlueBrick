@@ -17,6 +17,7 @@ use windows::{
     core::BOOL,
 };
 
+use super::BackendHelper;
 use super::PlatformHelper;
 
 unsafe extern "C" {
@@ -46,14 +47,14 @@ pub struct Platform {
 impl Platform {
     fn FakeWndProc(hwnd: HWND, mut msg: u32, mut wparam: WPARAM, lparam: LPARAM) -> LRESULT {
         unsafe {
-            let io = imgui::sys::igGetIO();
+            let io = Self::get_overlay().imgui.io();
 
             if _ImGui_ImplWin32_WndProcHandler(hwnd, msg, wparam, lparam).as_bool() {
                 return LRESULT(true as isize);
             }
 
             // eat message to disable mouse and keyboard passing through imgui
-            if ((*io).WantCaptureMouse && msg >= WM_MOUSEFIRST && msg <= WM_MOUSELAST) || ((*io).WantCaptureKeyboard && msg >= WM_KEYFIRST && msg <= WM_KEYLAST) {
+            if (io.want_capture_mouse && msg >= WM_MOUSEFIRST && msg <= WM_MOUSELAST) || (io.want_capture_keyboard && msg >= WM_KEYFIRST && msg <= WM_KEYLAST) {
                 return LRESULT(true as isize);
             }
 
