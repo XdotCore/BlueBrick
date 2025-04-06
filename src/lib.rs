@@ -2,6 +2,7 @@ pub mod logger;
 mod memutils;
 mod overlay;
 pub mod proxy;
+pub mod subbrick;
 
 use std::{error::Error, fmt, mem, ptr};
 
@@ -9,6 +10,7 @@ use proxy::Config;
 use logger::{MainLogger, Logger};
 use overlay::Overlay;
 use retour::static_detour;
+use subbrick::SubBrickManager;
 
 static_detour! {
     static AddToCoins: unsafe extern "cdecl" fn(*mut u64, u64, i32, bool);
@@ -33,7 +35,6 @@ type Result<T> = std::result::Result<T, StartupErr>;
 
 #[derive(Debug)]
 enum StartupErr {
-    Terminal(Box<dyn Error>),
     Overlay(Box<dyn Error>),
     Hooks(Box<dyn Error>),
     NotInitialized
@@ -43,7 +44,6 @@ impl fmt::Display for StartupErr {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         use StartupErr::*;
         let message = match self {
-            Terminal(e) => format!("Problem starting terminal: {e}"),
             Overlay(e) => format!("Problem attaching imgui: {e}"),
             Hooks(e) => format!("Problem hooking functions: {e}"),
             NotInitialized => format!("Attempted to use BlueBrick before it is initialized"),
@@ -54,7 +54,8 @@ impl fmt::Display for StartupErr {
 
 struct BlueBrick {
     overlay: Overlay,
-    main_logger: MainLogger
+    #[allow(dead_code)] // TODO: use this to (un)load mods
+    subbrick_manager: SubBrickManager,
 }
 
 impl BlueBrick {
@@ -63,34 +64,27 @@ impl BlueBrick {
         if unsafe { INSTANCE.is_null() }  {
             match config {
                 Some(config) => {
-                    let mut main_logger = match MainLogger::new() {
-                        Ok(main_logger) => main_logger,
-                        Err(e) => {
-                            let e = StartupErr::Terminal(e);
-                            let _ = msgbox::create("Error starting BlueBrick", &format!("{e}"), msgbox::IconType::Error);
-                            return Err(e)
-                        }
-                    };
-
                     let overlay = match Overlay::new(config) {
                         Ok(overlay) => overlay,
                         Err(e) => {
                             let e = StartupErr::Overlay(e);
-                            log_error!(main_logger, "{e}");
+                            log!(MainLogger::instance(), "{e}");
                             return Err(e);
                         }
                     };
 
                     if let Err(e) = hook() {
                         let e = StartupErr::Hooks(e);
-                        log_error!(main_logger, "{e}");
+                        log!(MainLogger::instance(), "{e}");
                         return Err(e);
                     }
+
+                    let subbrick_manager = SubBrickManager::new();
 
                     unsafe {
                         INSTANCE = Box::into_raw(Box::new(BlueBrick {
                             overlay,
-                            main_logger
+                            subbrick_manager
                         }));
                     }
                 }
@@ -114,5 +108,7 @@ impl BlueBrick {
 
 #[unsafe(no_mangle)]
 extern "C" fn start_bluebrick(config: Config) {
-    let _ = BlueBrick::get_or_init(Some(config));
+    if let Err(_) = BlueBrick::get_or_init(Some(config)) {
+        let _ = msgbox::create("BlueBrick Failed To Start", "Continuing to the game without BlueBrick", msgbox::IconType::Info);
+    }
 }

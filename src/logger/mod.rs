@@ -3,14 +3,16 @@ mod windows;
 
 pub mod web_colors;
 
-use std::{env, error::Error, fs::File, io::Write, sync::LazyLock};
+use std::{env, ffi::{c_char, CStr, CString}, fs::File, io::Write, sync::{LazyLock, Mutex, OnceLock}};
 
 use colored::{Color, ColoredString, Colorize};
+use dlopen::wrapper::{Container, WrapperApi};
+use dlopen_derive::WrapperApi;
 use regex::Regex;
 use web_colors::WebColor;
 
-use crate::BlueBrick;
-
+#[repr(C)]
+#[derive(Clone, Copy)]
 pub enum Severity {
     Info,
     Debug,
@@ -39,31 +41,35 @@ pub trait Logger {
     }
 }
 
+pub trait HasLogger {
+    fn logger() -> &'static Mutex<impl Logger>;
+}
+
 #[macro_export]
 macro_rules! log {
     ($dst:expr, $($arg:tt)*) => {
-        $dst.log(&format!($($arg)*));
+        $dst.lock().unwrap().log(&format!($($arg)*));
     }
 }
 
 #[macro_export]
 macro_rules! log_debug {
     ($dst:expr, $($arg:tt)*) => {
-        $dst.log_debug(&format!($($arg)*));
+        $dst.lock().unwrap().log_debug(&format!($($arg)*));
     }
 }
 
 #[macro_export]
 macro_rules! log_warning {
     ($dst:expr, $($arg:tt)*) => {
-        $dst.log_warning(&format!($($arg)*));
+        $dst.lock().unwrap().log_warning(&format!($($arg)*));
     }
 }
 
 #[macro_export]
 macro_rules! log_error {
     ($dst:expr, $($arg:tt)*) => {
-        $dst.log_error(&format!($($arg)*));
+        $dst.lock().unwrap().log_error(&format!($($arg)*));
     }
 }
 
@@ -82,29 +88,42 @@ pub(crate) struct MainLogger {
 
 impl Logger for MainLogger {
     fn log_with_severity(&mut self, msg: &str, severity: Severity) {
-        let msg = msg.replace("\r", "");
         self.log_impl("Loader", "BlueBrick", Some(WebColor::DeepSkyBlue), &msg, severity);
     }
 }
 
 impl MainLogger {
-    pub fn new() -> Result<Self, Box<dyn Error>> {
-        #[cfg(windows)]
-        windows::init_terminal()?;
+    // TODO: don't panic on fail
+    fn new() -> Self {
+        #[cfg(windows)] {
+            if let Err(e) = windows::init_terminal() {
+                let msg = format!("Failed to create BlueBrick logger: {e}");
+                let _ = msgbox::create("Error creating BlueBrick logger", &msg, msgbox::IconType::Error);
+                panic!("{msg}");
+            }
+        }
 
         // needed for colored to use truecolor
         // should be safe since no other threads should be running during BlueBrick startup
         unsafe { env::set_var("COLORTERM", "truecolor") };
 
-        Ok(Self {
+        Self {
             log_items: Vec::new(),
             log_scroll_changed: false,
-            file: File::create("bluebrick/log.txt")?
-        })
+            file: match File::create("bluebrick/log.txt") {
+                Ok(file) => file,
+                Err(e) => {
+                    let msg = format!("Failed to create or open BlueBrick log file: {e}");
+                    let _ = msgbox::create("Error creating BlueBrick logger", &msg, msgbox::IconType::Error);
+                    panic!("{msg}");
+                }
+            }
+        }
     }
 
-    pub fn log_impl<C: Into<Color>>(&mut self, kind: &str, name: &str, name_color: Option<C>, msg: &str, severity: Severity) {
-        let msg = Self::format_msg(kind, name, name_color, msg, severity);
+    fn log_impl<C: Into<Color>>(&mut self, kind: &str, name: &str, name_color: Option<C>, msg: &str, severity: Severity) {
+        let msg = msg.replace("\r", "");
+        let msg = Self::format_msg(kind, name, name_color, &msg, severity);
 
         print!("{msg}");
         self.log_to_file(&msg);
@@ -137,8 +156,11 @@ impl MainLogger {
         let time = chrono::Local::now();
         let time = format!("{}", time.format("%T"));
         let time = Self::apply_color(&time, time_color);
-        let kind = Self::apply_color(kind, kind_color);
+
+        let kind = Self::apply_color(&kind, kind_color);
+
         let name = Self::apply_color(name, name_color);
+
         let msg = Self::apply_color(msg, text_color);
 
         format!("{time} [{kind}] [{name}] {msg}\n")
@@ -228,7 +250,68 @@ impl MainLogger {
         color
     }
 
-    pub fn instance() -> &'static mut Self {
-        &mut BlueBrick::instance().main_logger
+    pub fn instance() -> &'static Mutex<Self> {
+        static MAIN_LOGGER: OnceLock<Mutex<MainLogger>> = OnceLock::new();
+        MAIN_LOGGER.get_or_init(|| Mutex::new(MainLogger::new()))
+    }
+}
+
+// TODO: implement name color
+fn log_impl(kind: &str, name: *const c_char, msg: *const c_char, severity: Severity) {
+    let name = unsafe { CStr::from_ptr(name) };
+    let name = String::from_utf8_lossy(name.to_bytes()).to_string();
+    let msg = unsafe { CStr::from_ptr(msg) };
+    let msg = String::from_utf8_lossy(msg.to_bytes()).to_string();
+    MainLogger::instance().lock().unwrap().log_impl::<Color>(kind, &name, None, &msg, severity);
+}
+
+#[unsafe(no_mangle)]
+extern "C" fn log_library_impl(name: *const c_char, msg: *const c_char, severity: Severity) {
+    log_impl("Library", name, msg, severity);
+    log_impl("Mod", name, msg, severity);
+}
+
+#[unsafe(no_mangle)]
+extern "C" fn log_mod_impl(name: *const c_char, msg: *const c_char, severity: Severity) {
+    log_impl("Mod", name, msg, severity);
+}
+
+#[derive(WrapperApi)]
+struct BBLoggerApi {
+    log_library_impl: extern "C" fn (name: *const c_char, msg: *const c_char, severity: Severity),
+    log_mod_impl: extern "C" fn (name: *const c_char, msg: *const c_char, severity: Severity),
+}
+
+fn get_bb_logger_api() -> &'static Container<BBLoggerApi> {
+    static GET_API: OnceLock<Container<BBLoggerApi>> = OnceLock::new();
+    GET_API.get_or_init(|| {
+        match unsafe { Container::<BBLoggerApi>::load("bluebrick/bluebrick") } {
+            Ok(api) => api,
+            Err(e) => panic!("{e}")
+        }
+    })
+}
+
+pub struct LibraryLogger {
+    name: &'static str,
+    log_impl: extern "C" fn(*const c_char, *const c_char, Severity),
+}
+
+impl LibraryLogger {
+    pub fn new(name: &'static str) -> Self {
+        Self {
+            name,
+            log_impl: get_bb_logger_api().log_library_impl
+        }
+    }
+}
+
+impl Logger for LibraryLogger {
+    fn log_with_severity(&mut self, msg: &str, severity: Severity) {
+        let name = self.name.replace("\0", "");
+        let name = CString::new(name).unwrap();
+        let msg = msg.replace("\0", "");
+        let msg = CString::new(msg).unwrap();
+        (self.log_impl)(name.as_ptr(), msg.as_ptr(), severity);
     }
 }

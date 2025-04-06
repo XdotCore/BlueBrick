@@ -1,5 +1,6 @@
 use colored::Color;
 
+// TODO: move to my own implementation of color before first release
 pub enum WebColor {
     AliceBlue,
     AntiqueWhite,

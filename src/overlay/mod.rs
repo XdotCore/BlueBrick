@@ -6,7 +6,7 @@ use std::{error::Error, path::PathBuf, ptr};
 use colored::Color;
 use imgui::{Condition, ConfigFlags, DrawData, FontConfig, FontGlyphRanges, FontSource, Key, StyleColor, StyleVar, Ui};
 
-use crate::{logger::{LogItem, Logger}, proxy::{Config, RequestedPlatform, RequestedRenderer}, MainLogger};
+use crate::{log, logger::{LogItem, Logger}, proxy::{Config, RequestedPlatform, RequestedRenderer}, MainLogger};
 
 pub struct Overlay {
     imgui: imgui::Context,
@@ -125,7 +125,7 @@ impl Overlay {
         }
 
         if ui.is_key_down(Key::T) {
-            MainLogger::instance().log("test");
+            log!(MainLogger::instance(), "test");
         }
 
         if self.is_showing {
@@ -166,10 +166,12 @@ impl Overlay {
 
     fn show_logs(ui: &Ui) {
         ui.window("Log Window").size([700.0, 650.0], Condition::FirstUseEver).horizontal_scrollbar(true).build(|| {
+            let mut main_logger = MainLogger::instance().lock().unwrap();
+
             let _spacing = ui.push_style_var(StyleVar::ItemSpacing([0.0, 0.2]));
 
             let mut _current_color = None;
-            for item in &MainLogger::instance().log_items {
+            for item in &main_logger.log_items {
                 match item {
                     LogItem::Text(msg) => {
                         ui.text(msg);
@@ -182,9 +184,9 @@ impl Overlay {
             }
 
             // scroll to end, including logic for the scrollbar covering part of the window
-            if MainLogger::instance().log_scroll_changed && (ui.scroll_y() + ui.clone_style().scrollbar_size) >= ui.scroll_max_y() {
+            if main_logger.log_scroll_changed && (ui.scroll_y() + ui.clone_style().scrollbar_size) >= ui.scroll_max_y() {
                 ui.set_scroll_here_y_with_ratio(1.0);
-                MainLogger::instance().log_scroll_changed = false;
+                main_logger.log_scroll_changed = false;
             }
         });
     }
