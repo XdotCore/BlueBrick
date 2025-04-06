@@ -8,9 +8,9 @@ dlopen = "0.1.8"
 dlopen_derive = "0.1.4"
 msgbox = "0.7.0"
 imgui = { git="https://github.com/XdotCore/imgui-rs", features = ["docking", "freetype"] }
-imgui-sys = { git="https://github.com/XdotCore/imgui-rs", features = ["docking", "freetype", "lunasvg", "use-git"] }
+imgui-sys = { git="https://github.com/XdotCore/imgui-rs", features = ["docking", "freetype", "lunasvg", "use-submodules"] }
 #imgui = { path="../../../imgui-rs/imgui", features = ["docking", "freetype"] }
-#imgui-sys = { path="../../../imgui-rs/imgui-sys", features = ["docking", "freetype", "lunasvg", "use-git"] }
+#imgui-sys = { path="../../../imgui-rs/imgui-sys", features = ["docking", "freetype", "lunasvg", "use-submodules"] }
 bluebrick-proc-macros = { path="../proc-macros" }
 
 [lib]
