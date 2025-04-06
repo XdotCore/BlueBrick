@@ -11,7 +11,7 @@ imgui = { git="https://github.com/XdotCore/imgui-rs", features = ["docking", "fr
 imgui-sys = { git="https://github.com/XdotCore/imgui-rs", features = ["docking", "freetype", "lunasvg", "use-git"] }
 #imgui = { path="../../../imgui-rs/imgui", features = ["docking", "freetype"] }
 #imgui-sys = { path="../../../imgui-rs/imgui-sys", features = ["docking", "freetype", "lunasvg", "use-git"] }
-bluebrick-proc-macros = { path="../proc_macros" }
+bluebrick-proc-macros = { path="../proc-macros" }
 
 [lib]
 crate-type = ["rlib"]
