@@ -153,7 +153,7 @@ impl Overlay {
             });
 
             if self.show_logs {
-                Self::show_logs(ui);
+                Self::show_logs(ui, &mut self.show_logs);
             }
 
             if self.show_demo_window {
@@ -167,8 +167,8 @@ impl Overlay {
         self.imgui.render()
     }
 
-    fn show_logs(ui: &Ui) {
-        ui.window("Log Window").size([700.0, 650.0], Condition::FirstUseEver).horizontal_scrollbar(true).build(|| {
+    fn show_logs(ui: &Ui, opened: &mut bool) {
+        ui.window("Log Window").size([700.0, 650.0], Condition::FirstUseEver).horizontal_scrollbar(true).opened(opened).build(|| {
             let mut main_logger = MainLogger::instance().lock().unwrap();
 
             let _spacing = ui.push_style_var(StyleVar::ItemSpacing([0.0, 0.2]));
