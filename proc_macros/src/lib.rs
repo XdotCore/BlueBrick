@@ -57,10 +57,16 @@ pub fn bluebrick_library(args: TokenStream, item: TokenStream) -> TokenStream {
             extern "C" fn init() { #lib_name::init(); }
 
             #[unsafe(no_mangle)]
-            extern "C" fn enable() { #lib_name::enable(); }
+            extern "C" fn enable() -> bool { #lib_name::enable() }
 
             #[unsafe(no_mangle)]
-            extern "C" fn disable() { #lib_name::disable(); }
+            extern "C" fn disable() -> bool { #lib_name::disable() }
+
+            #[unsafe(no_mangle)]
+            extern "C" fn set_imgui_ctx(ctx: *mut bluebrick::imgui::sys::ImGuiContext) { unsafe { bluebrick::imgui::sys::igSetCurrentContext(ctx) }; }
+
+            #[unsafe(no_mangle)]
+            extern "C" fn draw(ui: &mut bluebrick::imgui::Ui) { #lib_name::draw(ui); }
         };
 
         #lib

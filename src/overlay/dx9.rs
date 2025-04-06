@@ -1,5 +1,6 @@
 #![allow(nonstandard_style)]
 
+use bluebrick::imgui;
 use dlopen::wrapper::{Container, WrapperApi};
 use dlopen_derive::WrapperApi;
 use retour::static_detour;

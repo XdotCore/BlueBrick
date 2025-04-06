@@ -2,6 +2,7 @@ use std::{ffi::{c_char, CStr, OsStr}, fs::{self, DirEntry}};
 
 use dlopen::wrapper::{Container, WrapperApi};
 use dlopen_derive::WrapperApi;
+use bluebrick::imgui::{self, Ui, sys::ImGuiContext};
 
 use crate::logger::{main_log, main_log_error, main_log_warning};
 
@@ -14,6 +15,9 @@ pub(crate) struct SubBrickApi {
     init: extern "C" fn(),
     enable: extern "C" fn() -> bool,
     disable: extern "C" fn() -> bool,
+
+    set_imgui_ctx: extern "C" fn(ctx: *mut ImGuiContext),
+    draw: extern "C" fn(ui: &mut Ui),
 }
 
 impl SubBrickApi {
@@ -103,9 +107,16 @@ impl SubBrickManager {
                 }
             };
             main_log!("Loaded {} v{} by {} from {}", subbrick.name_string(), subbrick.version_string(), subbrick.author_string(), get_file_name(&entry));
+            subbrick.set_imgui_ctx(unsafe { imgui::sys::igGetCurrentContext() });
             subbrick.init();
             subbrick.enable();
             subbricks.push(subbrick);
+        }
+    }
+
+    pub fn draw_all(&self, ui: &mut Ui) {
+        for subbrick in self.libraries.iter().chain(self.mods.iter()) {
+            subbrick.draw(ui);
         }
     }
 }

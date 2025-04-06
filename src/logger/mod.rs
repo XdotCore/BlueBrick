@@ -233,7 +233,6 @@ fn log_impl(kind: &str, name: *const c_char, msg: *const c_char, severity: Sever
 #[unsafe(no_mangle)]
 extern "C" fn log_library_impl(name: *const c_char, msg: *const c_char, severity: Severity) {
     log_impl("Library", name, msg, severity);
-    log_impl("Mod", name, msg, severity);
 }
 
 #[unsafe(no_mangle)]

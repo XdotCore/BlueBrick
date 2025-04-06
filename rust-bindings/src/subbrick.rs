@@ -1,3 +1,5 @@
+use imgui::Ui;
+
 use crate::logger::HasLogger;
 
 pub trait SubBrick : HasLogger {
@@ -6,6 +8,8 @@ pub trait SubBrick : HasLogger {
     fn init();
     fn enable() -> bool;
     fn disable() -> bool;
+
+    fn draw(ui: &mut Ui);
 }
 
 pub trait Library : SubBrick {

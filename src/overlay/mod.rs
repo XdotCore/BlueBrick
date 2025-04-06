@@ -5,9 +5,9 @@ use std::{error::Error, path::PathBuf, ptr};
 
 use bluebrick::proxy::{Config, RequestedPlatform, RequestedRenderer};
 use colored::Color;
-use imgui::{Condition, ConfigFlags, DrawData, FontConfig, FontGlyphRanges, FontSource, Key, StyleColor, StyleVar, Ui};
+use bluebrick::imgui::{self, Condition, ConfigFlags, DrawData, FontConfig, FontGlyphRanges, FontSource, Key, StyleColor, StyleVar, Ui};
 
-use crate::{logger::{main_log, LogItem}, MainLogger};
+use crate::{logger::{main_log, LogItem}, BlueBrick, MainLogger};
 
 pub struct Overlay {
     imgui: imgui::Context,
@@ -159,6 +159,8 @@ impl Overlay {
             if self.show_demo_window {
                 ui.show_demo_window(&mut self.show_demo_window);
             }
+
+            BlueBrick::instance().subbrick_manager.draw_all(ui);
         }
 
         ui.end_frame_early();
