@@ -1,0 +1,9 @@
+[package]
+name = "bluebrick-proxy"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+dlopen = "0.1.8"
+dlopen_derive = "0.1.4"
+msgbox = "0.7.0"

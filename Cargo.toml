@@ -11,6 +11,7 @@ dlopen_derive = "0.1.4"
 msgbox = "0.7.0"
 regex = "1.11.1"
 bluebrick = { path="rust-bindings" }
+bluebrick-proxy = { path="rust-proxy-bindings" }
 
 [dependencies.retour]
 version = "0.3.1"

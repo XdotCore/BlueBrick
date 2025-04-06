@@ -5,7 +5,7 @@ pub mod subbrick;
 
 use std::{error::Error, fmt, mem, ptr};
 
-use bluebrick::proxy::Config;
+use bluebrick_proxy::Config;
 use logger::{main_log_error, MainLogger};
 use overlay::Overlay;
 use retour::static_detour;

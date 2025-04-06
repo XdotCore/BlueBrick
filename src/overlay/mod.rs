@@ -3,7 +3,7 @@ mod win32;
 
 use std::{error::Error, path::PathBuf, ptr};
 
-use bluebrick::proxy::{Config, RequestedPlatform, RequestedRenderer};
+use bluebrick_proxy::{Config, RequestedPlatform, RequestedRenderer};
 use colored::Color;
 use bluebrick::imgui::{self, Condition, ConfigFlags, DrawData, FontConfig, FontGlyphRanges, FontSource, Key, StyleColor, StyleVar, Ui};
 
