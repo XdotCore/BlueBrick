@@ -3,75 +3,42 @@ mod windows;
 
 pub mod web_colors;
 
-use std::{env, ffi::{c_char, CStr, CString}, fs::File, io::Write, sync::{LazyLock, Mutex, OnceLock}};
+use std::{env, ffi::{c_char, CStr}, fs::File, io::Write, sync::{LazyLock, Mutex, OnceLock}};
 
+use bluebrick::logger::Severity;
 use colored::{Color, ColoredString, Colorize};
-use dlopen::wrapper::{Container, WrapperApi};
-use dlopen_derive::WrapperApi;
 use regex::Regex;
 use web_colors::WebColor;
 
-#[repr(C)]
-#[derive(Clone, Copy)]
-pub enum Severity {
-    Info,
-    Debug,
-    Warning,
-    Error
-}
-
-// TODO: add documentation
-pub trait Logger {
-    fn log_with_severity(&mut self, msg: &str, severity: Severity);
-    
-    fn log(&mut self, msg: &str) {
-        self.log_with_severity(msg, Severity::Info);
-    }
-
-    fn log_debug(&mut self, msg: &str) {
-        self.log_with_severity(msg, Severity::Debug);
-    }
-
-    fn log_warning(&mut self, msg: &str) {
-        self.log_with_severity(msg, Severity::Warning);
-    }
-
-    fn log_error(&mut self, msg: &str) {
-        self.log_with_severity(msg, Severity::Error);
+macro_rules! main_log {
+    ($($arg:tt)*) => {
+        crate::logger::MainLogger::instance().lock().unwrap().log_with_severity(&format!($($arg)*), bluebrick::logger::Severity::Info);
     }
 }
+pub(crate) use main_log;
 
-pub trait HasLogger {
-    fn logger() -> &'static Mutex<impl Logger>;
-}
-
-#[macro_export]
-macro_rules! log {
-    ($dst:expr, $($arg:tt)*) => {
-        $dst.lock().unwrap().log(&format!($($arg)*));
+#[allow(unused_macros)]
+macro_rules! main_log_debug {
+    ($($arg:tt)*) => {
+        crate::logger::MainLogger::instance().lock().unwrap().log_with_severity(&format!($($arg)*), bluebrick::logger::Severity::Debug);
     }
 }
+#[allow(unused_imports)]
+pub(crate) use main_log_debug;
 
-#[macro_export]
-macro_rules! log_debug {
-    ($dst:expr, $($arg:tt)*) => {
-        $dst.lock().unwrap().log_debug(&format!($($arg)*));
+macro_rules! main_log_warning {
+    ($($arg:tt)*) => {
+        crate::logger::MainLogger::instance().lock().unwrap().log_with_severity(&format!($($arg)*), bluebrick::logger::Severity::Warning);
     }
 }
+pub(crate) use main_log_warning;
 
-#[macro_export]
-macro_rules! log_warning {
-    ($dst:expr, $($arg:tt)*) => {
-        $dst.lock().unwrap().log_warning(&format!($($arg)*));
+macro_rules! main_log_error {
+    ($($arg:tt)*) => {
+        crate::logger::MainLogger::instance().lock().unwrap().log_with_severity(&format!($($arg)*), bluebrick::logger::Severity::Error);
     }
 }
-
-#[macro_export]
-macro_rules! log_error {
-    ($dst:expr, $($arg:tt)*) => {
-        $dst.lock().unwrap().log_error(&format!($($arg)*));
-    }
-}
+pub(crate) use main_log_error;
 
 pub(crate) enum LogItem {
     Text(String),
@@ -84,12 +51,6 @@ pub(crate) struct MainLogger {
     pub log_items: Vec<LogItem>,
     pub log_scroll_changed: bool,
     file: File,
-}
-
-impl Logger for MainLogger {
-    fn log_with_severity(&mut self, msg: &str, severity: Severity) {
-        self.log_impl("Loader", "BlueBrick", Some(WebColor::DeepSkyBlue), &msg, severity);
-    }
 }
 
 impl MainLogger {
@@ -119,6 +80,10 @@ impl MainLogger {
                 }
             }
         }
+    }
+
+    pub fn log_with_severity(&mut self, msg: &str, severity: Severity) {
+        self.log_impl("Loader", "BlueBrick", Some(WebColor::DeepSkyBlue), &msg, severity);
     }
 
     fn log_impl<C: Into<Color>>(&mut self, kind: &str, name: &str, name_color: Option<C>, msg: &str, severity: Severity) {
@@ -274,44 +239,4 @@ extern "C" fn log_library_impl(name: *const c_char, msg: *const c_char, severity
 #[unsafe(no_mangle)]
 extern "C" fn log_mod_impl(name: *const c_char, msg: *const c_char, severity: Severity) {
     log_impl("Mod", name, msg, severity);
-}
-
-#[derive(WrapperApi)]
-struct BBLoggerApi {
-    log_library_impl: extern "C" fn (name: *const c_char, msg: *const c_char, severity: Severity),
-    log_mod_impl: extern "C" fn (name: *const c_char, msg: *const c_char, severity: Severity),
-}
-
-fn get_bb_logger_api() -> &'static Container<BBLoggerApi> {
-    static GET_API: OnceLock<Container<BBLoggerApi>> = OnceLock::new();
-    GET_API.get_or_init(|| {
-        match unsafe { Container::<BBLoggerApi>::load("bluebrick/bluebrick") } {
-            Ok(api) => api,
-            Err(e) => panic!("{e}")
-        }
-    })
-}
-
-pub struct LibraryLogger {
-    name: &'static str,
-    log_impl: extern "C" fn(*const c_char, *const c_char, Severity),
-}
-
-impl LibraryLogger {
-    pub fn new(name: &'static str) -> Self {
-        Self {
-            name,
-            log_impl: get_bb_logger_api().log_library_impl
-        }
-    }
-}
-
-impl Logger for LibraryLogger {
-    fn log_with_severity(&mut self, msg: &str, severity: Severity) {
-        let name = self.name.replace("\0", "");
-        let name = CString::new(name).unwrap();
-        let msg = msg.replace("\0", "");
-        let msg = CString::new(msg).unwrap();
-        (self.log_impl)(name.as_ptr(), msg.as_ptr(), severity);
-    }
 }

@@ -1,13 +1,12 @@
 pub mod logger;
 mod memutils;
 mod overlay;
-pub mod proxy;
 pub mod subbrick;
 
 use std::{error::Error, fmt, mem, ptr};
 
-use proxy::Config;
-use logger::{MainLogger, Logger};
+use bluebrick::proxy::Config;
+use logger::{main_log_error, MainLogger};
 use overlay::Overlay;
 use retour::static_detour;
 use subbrick::SubBrickManager;
@@ -68,14 +67,14 @@ impl BlueBrick {
                         Ok(overlay) => overlay,
                         Err(e) => {
                             let e = StartupErr::Overlay(e);
-                            log!(MainLogger::instance(), "{e}");
+                            main_log_error!("{e}");
                             return Err(e);
                         }
                     };
 
                     if let Err(e) = hook() {
                         let e = StartupErr::Hooks(e);
-                        log!(MainLogger::instance(), "{e}");
+                        main_log_error!("{e}");
                         return Err(e);
                     }
 

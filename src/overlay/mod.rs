@@ -3,10 +3,11 @@ mod win32;
 
 use std::{error::Error, path::PathBuf, ptr};
 
+use bluebrick::proxy::{Config, RequestedPlatform, RequestedRenderer};
 use colored::Color;
 use imgui::{Condition, ConfigFlags, DrawData, FontConfig, FontGlyphRanges, FontSource, Key, StyleColor, StyleVar, Ui};
 
-use crate::{log, logger::{LogItem, Logger}, proxy::{Config, RequestedPlatform, RequestedRenderer}, MainLogger};
+use crate::{logger::{main_log, LogItem}, MainLogger};
 
 pub struct Overlay {
     imgui: imgui::Context,
@@ -125,7 +126,7 @@ impl Overlay {
         }
 
         if ui.is_key_down(Key::T) {
-            log!(MainLogger::instance(), "test");
+            main_log!("test");
         }
 
         if self.is_showing {

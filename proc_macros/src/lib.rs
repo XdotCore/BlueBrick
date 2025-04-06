@@ -66,9 +66,9 @@ pub fn bluebrick_library(args: TokenStream, item: TokenStream) -> TokenStream {
         #lib
 
         impl HasLogger for #lib_name {
-            fn logger() -> &'static std::sync::Mutex<impl bluebrick::logger::Logger> {
-                static LOGGER: std::sync::OnceLock<std::sync::Mutex<bluebrick::logger::LibraryLogger>> = std::sync::OnceLock::new();
-                LOGGER.get_or_init(|| std::sync::Mutex::new(bluebrick::logger::LibraryLogger::new(#name)))
+            fn logger() -> &'static impl bluebrick::logger::Logger {
+                static LOGGER: std::sync::OnceLock<bluebrick::logger::LibraryLogger> = std::sync::OnceLock::new();
+                LOGGER.get_or_init(|| bluebrick::logger::LibraryLogger::new(#name))
             }
         }
 

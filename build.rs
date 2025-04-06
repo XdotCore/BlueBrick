@@ -22,8 +22,6 @@ fn build_imgui_parts() {
         .include("src/overlay/imgui/")
         .cpp(true)
         .compile("imgui");
-
-	
 }
 
 fn main() {
