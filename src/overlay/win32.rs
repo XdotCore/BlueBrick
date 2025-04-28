@@ -2,7 +2,6 @@
 
 use std::{error::Error, slice::from_raw_parts_mut};
 
-use bluebrick::imgui;
 use dlopen::wrapper::{Container, WrapperApi};
 use dlopen_derive::WrapperApi;
 use retour::static_detour;

@@ -1,0 +1,13 @@
+[package]
+name = "bluebrick-bindings-generator"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+colored = "3.0.0"
+num-traits = "0.2.19"
+quote = "1.0.40"
+syn = { version = "2.0.100", features = ["full"] }
+
+[lib]
+proc-macro = true
