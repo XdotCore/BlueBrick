@@ -3,16 +3,16 @@ mod windows;
 
 pub mod web_colors;
 
-use std::{env, ffi::{c_char, CStr}, fs::File, io::Write, sync::{LazyLock, Mutex, OnceLock}};
+use std::{env, ffi::{CStr, c_char}, fs::File, io::Write, sync::{LazyLock, Mutex, MutexGuard, OnceLock}};
 
-use bluebrick::logger::Severity;
+use bluebrick::{imgui::{StyleColor, StyleVar, Ui}, logger::Severity};
 use colored::{Color, ColoredString, Colorize};
 use regex::Regex;
 use web_colors::WebColor;
 
 macro_rules! main_log {
     ($($arg:tt)*) => {
-        crate::logger::MainLogger::instance().lock().unwrap().log_with_severity(&format!($($arg)*), bluebrick::logger::Severity::Info);
+        crate::logger::MainLogger::instance().log_with_severity(&format!($($arg)*), bluebrick::logger::Severity::Info);
     }
 }
 pub(crate) use main_log;
@@ -20,7 +20,7 @@ pub(crate) use main_log;
 #[allow(unused_macros)]
 macro_rules! main_log_debug {
     ($($arg:tt)*) => {
-        crate::logger::MainLogger::instance().lock().unwrap().log_with_severity(&format!($($arg)*), bluebrick::logger::Severity::Debug);
+        crate::logger::MainLogger::instance().log_with_severity(&format!($($arg)*), bluebrick::logger::Severity::Debug);
     }
 }
 #[allow(unused_imports)]
@@ -28,14 +28,14 @@ pub(crate) use main_log_debug;
 
 macro_rules! main_log_warning {
     ($($arg:tt)*) => {
-        crate::logger::MainLogger::instance().lock().unwrap().log_with_severity(&format!($($arg)*), bluebrick::logger::Severity::Warning);
+        crate::logger::MainLogger::instance().log_with_severity(&format!($($arg)*), bluebrick::logger::Severity::Warning);
     }
 }
 pub(crate) use main_log_warning;
 
 macro_rules! main_log_error {
     ($($arg:tt)*) => {
-        crate::logger::MainLogger::instance().lock().unwrap().log_with_severity(&format!($($arg)*), bluebrick::logger::Severity::Error);
+        crate::logger::MainLogger::instance().log_with_severity(&format!($($arg)*), bluebrick::logger::Severity::Error);
     }
 }
 pub(crate) use main_log_error;
@@ -215,9 +215,59 @@ impl MainLogger {
         color
     }
 
-    pub fn instance() -> &'static Mutex<Self> {
+    pub fn draw_logs(&mut self, ui: &Ui) {
+        let _spacing = ui.push_style_var(StyleVar::ItemSpacing([0.0, 0.2]));
+
+        let mut _current_color = None;
+        for item in &self.log_items {
+            match item {
+                LogItem::Text(msg) => {
+                    ui.text(msg);
+                    ui.same_line();
+                }
+                LogItem::NewLine => ui.text(""), // better than new_line() because it can stack multiple new lines
+                LogItem::Color(color) => _current_color = Some(ui.push_style_color(StyleColor::Text, color_to_f32_4(*color))),
+                LogItem::StyleReset => _current_color = None,
+            }
+        }
+
+        // scroll to end, including logic for the scrollbar covering part of the window
+        if self.log_scroll_changed && (ui.scroll_y() + ui.clone_style().scrollbar_size) >= ui.scroll_max_y() {
+            ui.set_scroll_here_y_with_ratio(1.0);
+            self.log_scroll_changed = false;
+        }
+    }
+
+    pub fn instance() -> MutexGuard<'static, Self> {
         static MAIN_LOGGER: OnceLock<Mutex<MainLogger>> = OnceLock::new();
-        MAIN_LOGGER.get_or_init(|| Mutex::new(MainLogger::new()))
+        MAIN_LOGGER.get_or_init(|| Mutex::new(MainLogger::new())).lock().unwrap()
+    }
+}
+
+fn u8_to_f32(byte: u8) -> f32 {
+    byte as f32 / u8::MAX as f32
+}
+
+fn color_to_f32_4(color: Color) -> [f32; 4] {
+    use Color::*;
+    match color {
+        Black => [0.0, 0.0, 0.0, 1.0 ],
+        Red => [205.0, 0.0, 0.0, 1.0 ],
+        Green => [0.0, 205.0, 0.0, 1.0 ],
+        Yellow => [205.0, 205.0, 0.0, 1.0 ],
+        Blue => [0.0, 0.0, 238.0, 1.0 ],
+        Magenta => [205.0, 0.0, 205.0, 1.0 ],
+        Cyan => [0.0, 205.0, 205.0, 1.0 ],
+        White => [229.0, 229.0, 229.0, 1.0 ],
+        BrightBlack => [127.0, 127.0, 127.0, 1.0 ],
+        BrightRed => [255.0, 0.0, 0.0, 1.0 ],
+        BrightGreen => [0.0, 255.0, 0.0, 1.0 ],
+        BrightYellow => [255.0, 255.0, 0.0, 1.0 ],
+        BrightBlue => [92.0, 92.0, 255.0, 1.0 ],
+        BrightMagenta => [255.0, 0.0, 255.0, 1.0 ],
+        BrightCyan => [0.0, 255.0, 255.0, 1.0 ],
+        BrightWhite => [255.0, 255.0, 255.0, 1.0 ],
+        TrueColor { r, g, b } => [u8_to_f32(r), u8_to_f32(g), u8_to_f32(b), 1.0],
     }
 }
 
@@ -227,7 +277,7 @@ fn log_impl(kind: &str, name: *const c_char, msg: *const c_char, severity: Sever
     let name = String::from_utf8_lossy(name.to_bytes()).to_string();
     let msg = unsafe { CStr::from_ptr(msg) };
     let msg = String::from_utf8_lossy(msg.to_bytes()).to_string();
-    MainLogger::instance().lock().unwrap().log_impl::<Color>(kind, &name, None, &msg, severity);
+    MainLogger::instance().log_impl::<Color>(kind, &name, None, &msg, severity);
 }
 
 #[unsafe(no_mangle)]

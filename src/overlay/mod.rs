@@ -4,10 +4,9 @@ mod win32;
 use std::{error::Error, path::PathBuf, ptr};
 
 use bluebrick_proxy::{Config, RequestedPlatform, RequestedRenderer};
-use colored::Color;
-use bluebrick::imgui::{self, Condition, ConfigFlags, DrawData, FontConfig, FontGlyphRanges, FontSource, Key, StyleColor, StyleVar, Ui};
+use bluebrick::imgui::{self, Condition, ConfigFlags, DrawData, FontConfig, FontGlyphRanges, FontSource, Key, Ui};
 
-use crate::{logger::{main_log, LogItem}, BlueBrick, MainLogger};
+use crate::{logger::main_log, BlueBrick, MainLogger};
 
 pub struct Overlay {
     imgui: imgui::Context,
@@ -17,7 +16,8 @@ pub struct Overlay {
     show_hide_key: Key,
     is_showing: bool,
     show_demo_window: bool,
-    show_logs: bool
+    show_logs: bool,
+    show_bricks: bool,
 }
 
 impl Overlay {
@@ -46,7 +46,8 @@ impl Overlay {
             show_hide_key: Key::F3,
             is_showing: true,
             show_demo_window: false,
-            show_logs: false
+            show_logs: false,
+            show_bricks: false,
         })
     }
 
@@ -134,6 +135,9 @@ impl Overlay {
             ui.main_menu_bar(|| {
                 ui.menu("Blue Brick", || {
                     ui.menu_item_config("Show Logs").build_with_ref(&mut self.show_logs);
+                    ui.menu_item_config("Show Bricks").build_with_ref(&mut self.show_bricks);
+
+                    ui.separator();
 
                     ui.menu_item_config("Show ImGui Demo").build_with_ref(&mut self.show_demo_window);
 
@@ -156,6 +160,10 @@ impl Overlay {
                 Self::show_logs(ui, &mut self.show_logs);
             }
 
+            if self.show_bricks {
+                Self::show_bricks(ui, &mut self.show_bricks);
+            }
+
             if self.show_demo_window {
                 ui.show_demo_window(&mut self.show_demo_window);
             }
@@ -168,28 +176,31 @@ impl Overlay {
     }
 
     fn show_logs(ui: &Ui, opened: &mut bool) {
-        ui.window("Log Window").size([700.0, 650.0], Condition::FirstUseEver).horizontal_scrollbar(true).opened(opened).build(|| {
-            let mut main_logger = MainLogger::instance().lock().unwrap();
+        ui.window("Log Window").size([900.0, 650.0], Condition::FirstUseEver).horizontal_scrollbar(true).opened(opened).build(|| {
+            let mut main_logger = MainLogger::instance();
 
-            let _spacing = ui.push_style_var(StyleVar::ItemSpacing([0.0, 0.2]));
+            main_logger.draw_logs(ui);
+        });
+    }
 
-            let mut _current_color = None;
-            for item in &main_logger.log_items {
-                match item {
-                    LogItem::Text(msg) => {
-                        ui.text(msg);
-                        ui.same_line();
-                    }
-                    LogItem::NewLine => ui.text(""), // better than new_line() because it can stack multiple new lines
-                    LogItem::Color(color) => _current_color = Some(ui.push_style_color(StyleColor::Text, color_to_f32_4(*color))),
-                    LogItem::StyleReset => _current_color = None,
+    fn show_bricks(ui: &Ui, opened: &mut bool) {
+        ui.window("Loaded Bricks").size([900.0, 650.0], Condition::FirstUseEver).opened(opened).build(|| {
+            if let Some(tab_bar) = ui.tab_bar("BrickTabs") {
+                let subbricks = &mut BlueBrick::instance().subbrick_manager;
+
+                if let Some(libraries) = ui.tab_item("Libraries") {
+                    subbricks.draw_library_list(ui);
+                    
+                    libraries.end();
                 }
-            }
 
-            // scroll to end, including logic for the scrollbar covering part of the window
-            if main_logger.log_scroll_changed && (ui.scroll_y() + ui.clone_style().scrollbar_size) >= ui.scroll_max_y() {
-                ui.set_scroll_here_y_with_ratio(1.0);
-                main_logger.log_scroll_changed = false;
+                if let Some(mods) = ui.tab_item("Mods") {
+                    subbricks.draw_mod_list(ui);
+
+                    mods.end();
+                }
+
+                tab_bar.end();
             }
         });
     }
@@ -226,32 +237,5 @@ trait PlatformHelper<P: PlatformHelper<P> + Platform> : BackendHelper<P> {
 trait RendererHelper<R: RendererHelper<R> + Renderer> : BackendHelper<R> {
     fn instance() -> &'static R {
         Self::cast(Self::get_overlay().renderer.as_ref())
-    }
-}
-
-fn u8_to_f32(byte: u8) -> f32 {
-    byte as f32 / u8::MAX as f32
-}
-
-fn color_to_f32_4(color: Color) -> [f32; 4] {
-    use Color::*;
-    match color {
-        Black => [0.0, 0.0, 0.0, 1.0 ],
-        Red => [205.0, 0.0, 0.0, 1.0 ],
-        Green => [0.0, 205.0, 0.0, 1.0 ],
-        Yellow => [205.0, 205.0, 0.0, 1.0 ],
-        Blue => [0.0, 0.0, 238.0, 1.0 ],
-        Magenta => [205.0, 0.0, 205.0, 1.0 ],
-        Cyan => [0.0, 205.0, 205.0, 1.0 ],
-        White => [229.0, 229.0, 229.0, 1.0 ],
-        BrightBlack => [127.0, 127.0, 127.0, 1.0 ],
-        BrightRed => [255.0, 0.0, 0.0, 1.0 ],
-        BrightGreen => [0.0, 255.0, 0.0, 1.0 ],
-        BrightYellow => [255.0, 255.0, 0.0, 1.0 ],
-        BrightBlue => [92.0, 92.0, 255.0, 1.0 ],
-        BrightMagenta => [255.0, 0.0, 255.0, 1.0 ],
-        BrightCyan => [0.0, 255.0, 255.0, 1.0 ],
-        BrightWhite => [255.0, 255.0, 255.0, 1.0 ],
-        TrueColor { r, g, b } => [u8_to_f32(r), u8_to_f32(g), u8_to_f32(b), 1.0],
     }
 }

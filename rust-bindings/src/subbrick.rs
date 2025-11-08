@@ -5,11 +5,12 @@ use crate::logger::HasLogger;
 pub trait SubBrick : HasLogger {
     // TODO: add depends on function
     
-    fn init();
-    fn enable() -> bool;
-    fn disable() -> bool;
+    fn new() -> Self;
+    fn init(&mut self);
+    fn enable(&mut self) -> bool;
+    fn disable(&mut self) -> bool;
 
-    fn draw(ui: &mut Ui);
+    fn draw(&mut self, ui: &Ui);
 }
 
 pub trait Library : SubBrick {

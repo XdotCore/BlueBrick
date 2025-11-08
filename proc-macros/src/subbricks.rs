@@ -53,21 +53,27 @@ pub fn bluebrick_library(args: TokenStream, item: TokenStream) -> TokenStream {
             }
 
             #[unsafe(no_mangle)]
-            extern "C" fn init() { #lib_name::init(); }
+            extern "C" fn new() -> *mut std::ffi::c_void { Box::into_raw(Box::new(#lib_name::new())) as _ }
+
+            fn cast(lib: *mut std::ffi::c_void) -> &'static mut #lib_name { unsafe { &mut *(lib as *mut #lib_name) } }
 
             #[unsafe(no_mangle)]
-            extern "C" fn enable() -> bool { #lib_name::enable() }
+            extern "C" fn init(lib: *mut std::ffi::c_void) { cast(lib).init(); }
 
             #[unsafe(no_mangle)]
-            extern "C" fn disable() -> bool { #lib_name::disable() }
+            extern "C" fn enable(lib: *mut std::ffi::c_void) -> bool { cast(lib).enable() }
+
+            #[unsafe(no_mangle)]
+            extern "C" fn disable(lib: *mut std::ffi::c_void) -> bool { cast(lib).disable() }
 
             #[unsafe(no_mangle)]
             extern "C" fn set_imgui_ctx(ctx: *mut bluebrick::imgui::sys::ImGuiContext) { unsafe { bluebrick::imgui::sys::igSetCurrentContext(ctx) }; }
 
             #[unsafe(no_mangle)]
-            extern "C" fn draw(ui: &mut bluebrick::imgui::Ui) { #lib_name::draw(ui); }
+            extern "C" fn draw(lib: *mut std::ffi::c_void, ui: &bluebrick::imgui::Ui) { cast(lib).draw(ui); }
         };
 
+        #[repr(C)]
         #lib
 
         impl HasLogger for #lib_name {

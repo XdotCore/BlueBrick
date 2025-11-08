@@ -53,7 +53,6 @@ impl fmt::Display for StartupErr {
 
 struct BlueBrick {
     overlay: Overlay,
-    #[allow(dead_code)] // TODO: use this to (un)load mods
     subbrick_manager: SubBrickManager,
 }
 
