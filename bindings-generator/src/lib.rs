@@ -1,8 +1,8 @@
-use proc_macro::TokenStream;
+#![allow(unused)]
 
-mod bindings;
+mod generator;
+mod logger;
+mod parser;
+mod tokens;
 
-#[proc_macro]
-pub fn include_bluebrick_bindings(item: TokenStream) -> TokenStream {
-    bindings::include_bluebrick_bindings(item)
-}
+pub use generator::generate_bluebrick_bindings;
