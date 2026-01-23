@@ -12,7 +12,6 @@ pub struct Parser<'a> {
     pub file: BBFile,
     basic_tokens: VecDeque<BasicToken>,
     used_basic_tokens: Vec<Vec<BasicToken>>,
-    last_basic_token: BasicToken,
     token_depth: usize,
 }
 
@@ -28,7 +27,6 @@ impl<'a> Parser<'a> {
             file,
             basic_tokens,
             used_basic_tokens: Vec::new(),
-            last_basic_token: BasicToken { variant: BasicTokenVariant::Comment(Default::default()), char_rect: Default::default() },
             token_depth: 0,
         }
     }
@@ -205,7 +203,11 @@ impl<'a> Parser<'a> {
     }
 
     pub fn make_error(&self, err: ParseError) -> Error {
-        self.make_error_with_basic(&self.last_basic_token, err)
+        if let Some(last) = self.last_used_basic_token() {
+            self.make_error_with_basic(last, err)
+        } else {
+            self.make_error_impl(Default::default(), ParseError::NoLastUsedBasic)
+        }
     }
 
     fn make_eof_error(&self, err: ParseError) -> Error {
@@ -233,10 +235,9 @@ impl<'a> Parser<'a> {
         let type_name = type_name::<T>();
         self.logger.log(&self.file.path, &format!("{depth}Ending {type_name} token"));
 
-        if let Some(mut basics_used) = self.used_basic_tokens.pop() {
-            if let Some(parent_basics_used) = self.used_basic_tokens.last_mut() {
-                parent_basics_used.append(&mut basics_used);
-            }
+        if let Some(mut basics_used) = self.used_basic_tokens.pop() &&
+           let Some(parent_basics_used) = self.used_basic_tokens.last_mut() {
+            parent_basics_used.append(&mut basics_used);
         }
         self.token_depth -= 1;
     }
@@ -280,25 +281,30 @@ impl<'a> Parser<'a> {
     }
 
     fn use_basic(&mut self, basic: BasicToken) -> Result<()> {
-        self.use_and_ignore(&basic)?;
-        self.last_basic_token = basic;
-        Ok(())
-    }
-
-    fn use_and_ignore(&mut self, basic: &BasicToken) -> Result<()> {
         if let Some(basics_used) = self.used_basic_tokens.last_mut() {
-            basics_used.push(basic.clone());
+            basics_used.push(basic);
             Ok(())
         } else {
             Err(self.make_error(ParseError::RanOutOfUsedBasics))
         }
     }
 
+    fn last_used_basic_token(&self) -> Option<&BasicToken> {
+        self.used_basic_tokens.iter().flatten().rev().find(|basic| {
+            match basic.variant {
+                BasicTokenVariant::Comment(_) => {
+                    false // ignore
+                }
+                _ => true
+            }
+        })
+    }
+
     pub fn take_word(&mut self) -> Result<String> {
         while let Some(basic) = self.basic_tokens.pop_front() {
             match basic.variant.clone() {
                 BasicTokenVariant::Comment(_) => {
-                    self.use_and_ignore(&basic);
+                    self.use_basic(basic);
                 }
                 BasicTokenVariant::Reserved(reserved) => {
                     return Err(self.make_error_with_basic(&basic, ParseError::WantWordGotReserved(reserved)));
@@ -329,7 +335,7 @@ impl<'a> Parser<'a> {
         while let Some(basic) = self.basic_tokens.pop_front() {
             match basic.variant.clone() {
                 BasicTokenVariant::Comment(_) => {
-                    self.use_and_ignore(&basic);
+                    self.use_basic(basic);
                 }
                 BasicTokenVariant::Reserved(reserved) => {
                     self.use_basic(basic);
