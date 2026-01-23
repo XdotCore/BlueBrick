@@ -99,7 +99,7 @@ impl Generator {
     fn compute_rust(&self, tokens: Vec<FileToken>) -> (Vec<RustFile>, Vec<Error>) {
         let mut compute_errs = Vec::new();
 
-        let files = tokens.iter().chunk_by(|token| token.module()).into_iter().filter_map(|(module, tokens)| {
+        let files = tokens.iter().chunk_by(|token| token.module()).into_iter().filter_map(|(module, bbfiles)| {
             let module = match module {
                 Ok(module) => module,
                 Err(e) => {
@@ -111,14 +111,16 @@ impl Generator {
             Some(RustFile {
                 name: module.name.clone(),
                 path: module.path(),
-                contents: tokens.filter_map(|token| {
-                    match token.to_rust() {
-                        Ok(rust_file) => Some(rust_file),
-                        Err(e) => {
-                            compute_errs.push(e);
-                            None
+                contents: bbfiles.flat_map(|bbfile| {
+                    bbfile.children.iter().filter_map(|child| {
+                        match child.to_rust() {
+                            Ok(rust_file) => Some(rust_file),
+                            Err(e) => {
+                                compute_errs.push(e);
+                                None
+                            }
                         }
-                    }
+                    }).collect_vec()
                 }).collect(),
             })
         }).collect();
@@ -180,6 +182,7 @@ pub enum ParseError {
     UnexpectedReserved { reserved: String, options: Vec<String> },
     InvalidNumber { word: String, num_type: String, e: Box<dyn std::error::Error> },
     RanOutOfUsedBasics,
+    NoLastUsedBasic,
     InvalidCallConv(String),
     ExpectedDelimiter(String),
     EmptyModule,
@@ -197,6 +200,7 @@ impl fmt::Display for ParseError {
             Self::UnexpectedReserved { reserved, options } => format!("Unexpected reserved '{reserved}', expected one of {options:?}"),
             Self::InvalidNumber{ word, num_type, e } => format!("\"{word}\" is not a valid {num_type}: {e}"),
             Self::RanOutOfUsedBasics => format!("Ran out of tracked basic tokens that were used. Tokens must have been ended more times than they were started"),
+            Self::NoLastUsedBasic => format!("Tried to access last used basic token when none have been used yet"),
             Self::InvalidCallConv(word) => format!("\"{word}\" is not a valid calling convention"),
             Self::ExpectedDelimiter(delimiter) => format!("Expected delimiter \"{delimiter}\""),
             Self::EmptyModule => format!("Expected module, found nothing"),

@@ -20,7 +20,6 @@ pub trait Token : Debug {
     fn to_rust(&self) -> Result<TokenStream>;
 }
 
-// TODO: possibly make these enums less repetitive
 pub enum ChildToken {
     Fields(FieldsToken),
     Implements(ImplementsToken),
@@ -171,7 +170,7 @@ impl Token for FileToken {
     }
 
     fn to_rust(&self) -> Result<TokenStream> {
-        todo!()
+        unimplemented!("Use children")
     }
 }
 
