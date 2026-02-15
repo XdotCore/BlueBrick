@@ -1,5 +1,5 @@
-mod dx9;
-mod win32;
+mod platforms;
+mod renderers;
 
 use std::{error::Error, path::PathBuf, sync::mpsc::{self, Sender}};
 
@@ -8,8 +8,10 @@ use bluebrick::imgui::{self, Condition, ConfigFlags, FontConfig, FontGlyphRanges
 
 use crate::BBEvent;
 use crate::logger::{MainLogger, main_log};
-use crate::overlay::dx9::{DX9, DX9Event, DX9Handle};
-use crate::overlay::win32::{Win32, Win32Event, Win32Handle};
+use crate::overlay::renderers::{RendererEvent, SomeRenderer, SomeRendererHandle};
+use crate::overlay::renderers::dx9::{DX9, DX9Handle};
+use crate::overlay::platforms::{PlatformEvent, SomePlatform, SomePlatformHandle};
+use crate::overlay::platforms::win32::{Win32, Win32Handle};
 use crate::subbrick::SubBrickManager;
 
 pub enum OverlayEvent {
@@ -22,26 +24,6 @@ pub enum OverlayEvent {
 impl Into<BBEvent> for OverlayEvent {
     fn into(self) -> BBEvent {
         BBEvent::Overlay(self)
-    }
-}
-
-pub enum PlatformEvent {
-    Win32(Win32Event),
-}
-
-impl Into<BBEvent> for PlatformEvent {
-    fn into(self) -> BBEvent {
-        OverlayEvent::Platform(self).into()
-    }
-}
-
-pub enum RendererEvent {
-    DX9(DX9Event),
-}
-
-impl Into<BBEvent> for RendererEvent {
-    fn into(self) -> BBEvent {
-        OverlayEvent::Renderer(self).into()
     }
 }
 
@@ -88,9 +70,9 @@ impl Overlay {
     }
 
     fn add_fonts(imgui: &mut imgui::Context) {
-        const FONT_BYTES: &[u8] = include_bytes!("fonts/CascadiaCode/CascadiaCode.ttf");
-        const FONT_ITALIC_BYTES: &[u8] = include_bytes!("fonts/CascadiaCode/CascadiaCodeItalic.ttf");
-        const FONT_EMOJI_BYTES: &[u8] = include_bytes!("fonts/FluentUIEmoji/FluentUIEmojiFlat.ttf");
+        const FONT_BYTES: &[u8] = include_bytes!("overlay/fonts/CascadiaCode/CascadiaCode.ttf");
+        const FONT_ITALIC_BYTES: &[u8] = include_bytes!("overlay/fonts/CascadiaCode/CascadiaCodeItalic.ttf");
+        const FONT_EMOJI_BYTES: &[u8] = include_bytes!("overlay/fonts/FluentUIEmoji/FluentUIEmojiFlat.ttf");
         const FONT_SIZE: f32 = 16.0;
         let font_range: FontGlyphRanges = FontGlyphRanges::from_slice(&[0x1, 0x1FFFF, 0]);
 
@@ -307,90 +289,4 @@ impl OverlayHandle {
         self.tx.send(OverlayEvent::PostDraw(pdtx).into()).expect("Bluebrick thread died");
         pdrx.recv().expect("Bluebrick thread dropped pdrx")
     }
-}
-
-trait Platform {
-    fn new_frame(&self);
-}
-
-enum SomePlatform {
-    Win32(Win32),
-}
-
-impl SomePlatform {
-    fn get_inner(&self) -> &dyn Platform {
-        match self {
-            Self::Win32(win32) => win32,
-        }
-    }
-}
-
-impl Platform for SomePlatform {
-    fn new_frame(&self) {
-        self.get_inner().new_frame();
-    }
-}
-
-trait PlatformHandle {
-    fn new_frame(&self);
-}
-
-enum SomePlatformHandle {
-    Win32(Win32Handle),
-}
-
-impl SomePlatformHandle {
-    fn get_inner(&self) -> &dyn PlatformHandle {
-        match self {
-            Self::Win32(win32) => win32,
-        }
-    }
-}
-
-impl PlatformHandle for SomePlatformHandle {
-    fn new_frame(&self) {
-        self.get_inner().new_frame();
-    }
-}
-
-trait Renderer {
-
-}
-
-enum SomeRenderer {
-    DX9(DX9),
-}
-
-impl SomeRenderer {
-    #[allow(unused)]
-    fn get_inner(&self) -> &dyn Renderer {
-        match self {
-            Self::DX9(dx9) => dx9,
-        }
-    }
-}
-
-impl Renderer for SomeRenderer {
-
-}
-
-trait RendererHandle {
-
-}
-
-enum SomeRendererHandle {
-    DX9(DX9Handle),
-}
-
-impl SomeRendererHandle {
-    #[allow(unused)]
-    fn get_inner(&self) -> &dyn RendererHandle {
-        match self {
-            Self::DX9(dx9) => dx9,
-        }
-    }
-}
-
-impl RendererHandle for SomeRendererHandle {
-
 }

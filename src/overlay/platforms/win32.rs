@@ -18,7 +18,8 @@ use windows::{
 };
 
 use crate::{BBEvent, BLUEBRICK_HANDLE};
-use crate::overlay::{OverlayEvent, Platform, PlatformEvent, PlatformHandle, SomePlatformHandle};
+use crate::overlay::OverlayEvent;
+use crate::overlay::platforms::{Platform, PlatformEvent, PlatformHandle, SomePlatformHandle};
 
 unsafe extern "C" {
     fn _ImGui_ImplWin32_Init(hwnd: HWND) -> bool;

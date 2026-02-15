@@ -15,7 +15,8 @@ use windows::{
 };
 
 use crate::{BBEvent, BLUEBRICK_HANDLE};
-use crate::overlay::{PlatformHandle, Renderer, RendererHandle, SomePlatformHandle};
+use crate::overlay::renderers::{Renderer, RendererHandle};
+use crate::overlay::platforms::{PlatformHandle, SomePlatformHandle};
 
 unsafe extern "C" {
     fn _ImGui_ImplDX9_Init(device: *mut *const IDirect3DDevice9_Vtbl) -> bool;
