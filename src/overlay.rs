@@ -3,15 +3,13 @@ mod renderers;
 
 use std::{error::Error, path::PathBuf, sync::mpsc::{self, Sender}};
 
-use bluebrick_proxy::{Config, RequestedPlatform, RequestedRenderer};
+use bluebrick_proxy::Config;
 use bluebrick::imgui::{self, Condition, ConfigFlags, FontConfig, FontGlyphRanges, FontSource, Key, Ui};
 
 use crate::BBEvent;
 use crate::logger::{MainLogger, main_log};
 use crate::overlay::renderers::{RendererEvent, SomeRenderer, SomeRendererHandle};
-use crate::overlay::renderers::dx9::{DX9, DX9Handle};
 use crate::overlay::platforms::{PlatformEvent, SomePlatform, SomePlatformHandle};
-use crate::overlay::platforms::win32::{Win32, Win32Handle};
 use crate::subbrick::SubBrickManager;
 
 pub enum OverlayEvent {
@@ -40,14 +38,9 @@ pub struct Overlay {
 
 impl Overlay {
     pub fn new(config: Config) -> Result<Self, Box<dyn Error>> {
+        let platform = SomePlatform::new(config)?;
+        let renderer = SomeRenderer::new(config)?;
 
-        let platform = match config.platform {
-            RequestedPlatform::Win32 => SomePlatform::Win32(Win32::new()?),
-        };
-
-        let renderer = match config.renderer {
-            RequestedRenderer::DX9 => SomeRenderer::DX9(DX9::new()?),
-        };
         let mut imgui = imgui::Context::create();
         imgui.style_mut().use_dark_colors();
 
@@ -229,26 +222,8 @@ impl Overlay {
             OverlayEvent::PostDraw(tx) => {
                 _ = tx.send(self.post_draw());
             }
-            OverlayEvent::Platform(platform) => {
-                match (platform, &mut self.platform) {
-                    (PlatformEvent::Win32(win32_event), SomePlatform::Win32(win32)) => {
-                        win32.handle_event(win32_event);
-                    }
-                    /*_ => {
-                        msgbox::create("Mismatched platform types", "A BlueBrick event was triggered with the wrong platform type", msgbox::IconType::Error);
-                    }*/
-                }
-            }
-            OverlayEvent::Renderer(renderer) => {
-                match (renderer, &mut self.renderer) {
-                    (RendererEvent::DX9(dx9_event), SomeRenderer::DX9(dx9)) => {
-                        dx9.handle_event(dx9_event);
-                    }
-                    /*_ => {
-                        msgbox::create("Mismatched renderer types", "A BlueBrick event was triggered with the wrong renderer type", msgbox::IconType::Error);
-                    }*/
-                }
-            }
+            OverlayEvent::Platform(event) => self.platform.handle_event(event),
+            OverlayEvent::Renderer(event) => self.renderer.handle_event(event),
         }
     }
 }
@@ -262,14 +237,8 @@ pub struct OverlayHandle {
 
 impl OverlayHandle {
     pub fn new(config: Config, tx: Sender<BBEvent>) -> Self {
-        // TODO: move this match into the enums
-        let platform = match config.platform {
-            RequestedPlatform::Win32 => SomePlatformHandle::Win32(Win32Handle::new(tx.clone())),
-        };
-
-        let renderer = match config.renderer {
-            RequestedRenderer::DX9 => SomeRendererHandle::DX9(DX9Handle::new(tx.clone())),
-        };
+        let platform = SomePlatformHandle::new(config, tx.clone());
+        let renderer = SomeRendererHandle::new(config, tx.clone());
 
         Self {
             tx,
