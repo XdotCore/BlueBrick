@@ -3,28 +3,35 @@ mod memutils;
 mod overlay;
 pub mod subbrick;
 
-use std::{error::Error, fmt, mem, ptr};
+use std::{error::Error, fmt, mem, sync::{OnceLock, mpsc::{self, Sender}}, thread};
 
 use bluebrick_proxy::Config;
-use logger::{main_log_error, MainLogger};
-use overlay::Overlay;
 use retour::static_detour;
-use subbrick::SubBrickManager;
 
-static_detour! {
-    static AddToCoins: unsafe extern "cdecl" fn(*mut u64, u64, i32, bool);
-}
+use crate::logger::{main_log_debug, main_log_error};
+use crate::overlay::{Overlay, OverlayEvent, OverlayHandle};
+use crate::subbrick::SubBrickManager;
 
 fn hook() -> std::result::Result<(), Box<dyn Error>> {
+    static_detour! {
+        static AddToCoins: unsafe extern "cdecl" fn(*mut u64, u64, i32, bool);
+        static AddToCoins2: unsafe extern "cdecl" fn(*mut u64, u64, i32, bool);
+    }
+
     let real_add_to_coins = memutils::get_executable_base()? + 0x7E1070;
     let real_add_to_coins = unsafe { mem::transmute(real_add_to_coins) };
 
     unsafe {
-        AddToCoins.initialize(real_add_to_coins, |coins_ptr, to_add, mult, round_to_10s| {
-            let _ = msgbox::create("Got coin", &format!("worth: {to_add}, mult: {mult}"), msgbox::IconType::Info);
+        AddToCoins.initialize(real_add_to_coins, move |coins_ptr, to_add, mult, round_to_10s| {
+            main_log_debug!("1: Got coin worth: {to_add}, mult: {mult}");
             AddToCoins.call(coins_ptr, 0, mult, round_to_10s);
         })?;
         AddToCoins.enable()?;
+        AddToCoins2.initialize(real_add_to_coins, move |coins_ptr, to_add, mult, round_to_10s| {
+            main_log_debug!("2: Got coin worth: {to_add}, mult: {mult}");
+            AddToCoins2.call(coins_ptr, 0, mult, round_to_10s);
+        })?;
+        AddToCoins2.enable()?;
     }
 
     Ok(())
@@ -36,7 +43,6 @@ type Result<T> = std::result::Result<T, StartupErr>;
 enum StartupErr {
     Overlay(Box<dyn Error>),
     Hooks(Box<dyn Error>),
-    NotInitialized
 }
 
 impl fmt::Display for StartupErr {
@@ -45,10 +51,14 @@ impl fmt::Display for StartupErr {
         let message = match self {
             Overlay(e) => format!("Problem attaching imgui: {e}"),
             Hooks(e) => format!("Problem hooking functions: {e}"),
-            NotInitialized => format!("Attempted to use BlueBrick before it is initialized"),
         };
         write!(f, "Error starting up BlueBrick: {}", message)
     }
+}
+
+pub enum BBEvent {
+    Overlay(OverlayEvent),
+    SubBrick//(SubBrickEvent),
 }
 
 struct BlueBrick {
@@ -57,56 +67,66 @@ struct BlueBrick {
 }
 
 impl BlueBrick {
-    fn get_or_init(config: Option<Config>) -> Result<&'static mut BlueBrick> {
-        static mut INSTANCE: *mut BlueBrick = ptr::null_mut();
-        if unsafe { INSTANCE.is_null() }  {
-            match config {
-                Some(config) => {
-                    let overlay = match Overlay::new(config) {
-                        Ok(overlay) => overlay,
-                        Err(e) => {
-                            let e = StartupErr::Overlay(e);
-                            main_log_error!("{e}");
-                            return Err(e);
-                        }
-                    };
+    fn new(config: Config) -> Result<Self> {
+        let overlay = match Overlay::new(config) {
+            Ok(overlay) => overlay,
+            Err(e) => return Err(StartupErr::Overlay(e)),
+        };
 
-                    if let Err(e) = hook() {
-                        let e = StartupErr::Hooks(e);
-                        main_log_error!("{e}");
-                        return Err(e);
-                    }
-
-                    let subbrick_manager = SubBrickManager::new();
-
-                    unsafe {
-                        INSTANCE = Box::into_raw(Box::new(BlueBrick {
-                            overlay,
-                            subbrick_manager
-                        }));
-                    }
-                }
-                None => {
-                    let e = StartupErr::NotInitialized;
-                    let _ = msgbox::create("Error getting BlueBrick", &format!("{e}"), msgbox::IconType::Error);
-                    return Err(e);
-                }
-            }
+        if let Err(e) = hook() {
+            return Err(StartupErr::Hooks(e));
         }
-        Ok(unsafe { &mut *INSTANCE })
+
+        let subbrick_manager = SubBrickManager::new();
+
+        Ok(BlueBrick {
+            overlay,
+            subbrick_manager
+        })
     }
 
-    pub fn instance() -> &'static mut BlueBrick {
-        match Self::get_or_init(None) {
-            Ok(bb) => bb,
-            Err(e) => panic!("{e}")
+    fn handle_event(&mut self, event: BBEvent) {
+        match event {
+            BBEvent::Overlay(event) => self.overlay.handle_event(event, &mut self.subbrick_manager),
+            BBEvent::SubBrick => {}//(subbrick) => self.subbrick_manager.handle_event(event),
         }
+    }
+}
+
+pub struct BlueBrickHandle {
+    overlay: OverlayHandle,
+    #[allow(unused)]
+    tx: Sender<BBEvent>,
+}
+
+pub static BLUEBRICK_HANDLE: OnceLock<BlueBrickHandle> = OnceLock::new();
+impl BlueBrickHandle {
+    fn start(config: Config) {
+        let (tx, rx) = mpsc::channel();
+
+        thread::spawn(move || {
+            let mut bb = match BlueBrick::new(config) {
+                Ok(bb) => bb,
+                Err(e) => {
+                    main_log_error!("{e}");
+                    let _ = msgbox::create("BlueBrick Failed To Start", "Continuing to the game without BlueBrick", msgbox::IconType::Info);
+                    return;
+                }
+            };
+
+            while let Ok(msg) = rx.recv() {
+                bb.handle_event(msg);
+            }
+        });
+        
+        _ = BLUEBRICK_HANDLE.set(Self {
+            overlay: OverlayHandle::new(config, tx.clone()),
+            tx
+        });
     }
 }
 
 #[unsafe(no_mangle)]
 extern "C" fn start_bluebrick(config: Config) {
-    if let Err(_) = BlueBrick::get_or_init(Some(config)) {
-        let _ = msgbox::create("BlueBrick Failed To Start", "Continuing to the game without BlueBrick", msgbox::IconType::Info);
-    }
+    BlueBrickHandle::start(config);
 }

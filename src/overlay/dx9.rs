@@ -1,10 +1,11 @@
 #![allow(nonstandard_style)]
 
+use std::{error::Error, sync::{OnceLock, mpsc::Sender}};
+
 use bluebrick::imgui;
 use dlopen::wrapper::{Container, WrapperApi};
 use dlopen_derive::WrapperApi;
 use retour::static_detour;
-use std::{error::Error, sync::OnceLock};
 use windows::{
     Win32::{
         Foundation::{HWND, RECT},
@@ -13,12 +14,13 @@ use windows::{
     core::HRESULT,
 };
 
-use super::BackendHelper;
+use crate::{BBEvent, BLUEBRICK_HANDLE};
+use crate::overlay::{PlatformHandle, Renderer, RendererHandle, SomePlatformHandle};
 
 unsafe extern "C" {
     fn _ImGui_ImplDX9_Init(device: *mut *const IDirect3DDevice9_Vtbl) -> bool;
     fn _ImGui_ImplDX9_NewFrame();
-    fn _ImGui_ImplDX9_RenderDrawData(draw_data: &imgui::DrawData);
+    fn _ImGui_ImplDX9_RenderDrawData(draw_data: *mut imgui::sys::ImDrawData);
     fn _ImGui_ImplDX9_CreateDeviceObjects() -> bool;
     fn _ImGui_ImplDX9_InvalidateDeviceObjects();
 }
@@ -38,9 +40,13 @@ static_detour! {
     static Direct3D9_Device_Present: unsafe extern "system" fn(*mut *const IDirect3DDevice9_Vtbl, *const RECT, *const RECT, HWND, *const RGNDATA) -> HRESULT;
 }
 
-pub struct Renderer {}
+pub enum DX9Event {
 
-impl Renderer {
+}
+
+pub struct DX9 {}
+
+impl DX9 {
     fn hook_device(device: *const *const IDirect3DDevice9_Vtbl) {
         static CALL_ONLY_ONCE: OnceLock<()> = OnceLock::new();
 
@@ -72,27 +78,38 @@ impl Renderer {
                 let real_present = std::mem::transmute(real_present);
 
                 match Direct3D9_Device_Present.initialize(real_present, |this, source_rect, dest_rect, dest_window_override, dirty_region| {
-                    static CALL_ONLY_ONCE: OnceLock<()> = OnceLock::new();
-                    CALL_ONLY_ONCE.get_or_init(|| {
-                        let mut params = Default::default();
-                        let _ = ((**this).GetCreationParameters)(this.cast(), &mut params);
-                        Self::get_overlay().platform.set_window(params.hFocusWindow.0.cast());
+                    if let Some(bb) = BLUEBRICK_HANDLE.get() {
+                        static CALL_ONLY_ONCE: OnceLock<()> = OnceLock::new();
+                        CALL_ONLY_ONCE.get_or_init(|| {
+                            let mut params = Default::default();
+                            let _ = ((**this).GetCreationParameters)(this.cast(), &mut params);
+                            #[allow(irrefutable_let_patterns)]
+                            if let SomePlatformHandle::Win32(win32) = &bb.overlay.platform {
+                                win32.set_window(params.hFocusWindow.0.cast());
+                            }
 
-                        _ImGui_ImplDX9_Init(this);
-                    });
+                            _ImGui_ImplDX9_Init(this);
+                        });
 
-                    Self::get_overlay().platform.new_frame();
-                    _ImGui_ImplDX9_NewFrame();
+                        bb.overlay.platform.new_frame();
+                        _ImGui_ImplDX9_NewFrame();
 
-                    let draw_data = Self::get_overlay().draw();
+                        bb.overlay.draw();
+                        let draw_data = {
+                            imgui::sys::igRender();
+                            imgui::sys::igGetDrawData()
+                        };
 
-                    _ImGui_ImplDX9_RenderDrawData(draw_data);
+                        _ImGui_ImplDX9_RenderDrawData(draw_data);
 
-                    let result = Direct3D9_Device_Present.call(this, source_rect, dest_rect, dest_window_override, dirty_region);
+                        let result = Direct3D9_Device_Present.call(this, source_rect, dest_rect, dest_window_override, dirty_region);
 
-                    Self::get_overlay().post_draw();
+                        bb.overlay.post_draw();
 
-                    return result;
+                        return result;
+                    } else {
+                        Direct3D9_Device_Present.call(this, source_rect, dest_rect, dest_window_override, dirty_region)
+                    }
                 }) {
                     Err(e) => {
                         let _ = msgbox::create("Could not hook dx9 Present", &format!("Error: {e:}"), msgbox::IconType::Error);
@@ -193,11 +210,35 @@ impl Renderer {
         Self::init()?;
         Ok(Self {})
     }
+
+    pub fn handle_event(&mut self, event: DX9Event) {
+        match event {
+
+        }
+    }
 }
 
-impl super::Backend for Renderer {}
+impl Renderer for DX9 {
 
-impl super::Renderer for Renderer {}
+}
 
-impl super::BackendHelper<Self> for Renderer {}
-impl super::RendererHelper<Self> for Renderer {}
+pub struct DX9Handle {
+    #[allow(unused)]
+    tx: Sender<BBEvent>,
+}
+
+impl DX9Handle {
+    pub fn new(tx: Sender<BBEvent>) -> Self {
+        Self {
+            tx
+        }
+    }
+}
+
+impl DX9Handle {
+
+}
+
+impl RendererHandle for DX9Handle {
+
+}

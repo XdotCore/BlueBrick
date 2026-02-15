@@ -1,18 +1,54 @@
 mod dx9;
 mod win32;
 
-use std::{error::Error, path::PathBuf, ptr};
+use std::{error::Error, path::PathBuf, sync::mpsc::{self, Sender}};
 
 use bluebrick_proxy::{Config, RequestedPlatform, RequestedRenderer};
-use bluebrick::imgui::{self, Condition, ConfigFlags, DrawData, FontConfig, FontGlyphRanges, FontSource, Key, Ui};
+use bluebrick::imgui::{self, Condition, ConfigFlags, FontConfig, FontGlyphRanges, FontSource, Key, Ui};
 
-use crate::{logger::main_log, BlueBrick, MainLogger};
+use crate::BBEvent;
+use crate::logger::{MainLogger, main_log};
+use crate::overlay::dx9::{DX9, DX9Event, DX9Handle};
+use crate::overlay::win32::{Win32, Win32Event, Win32Handle};
+use crate::subbrick::SubBrickManager;
+
+pub enum OverlayEvent {
+    Draw(Sender<()>),
+    PostDraw(Sender<()>),
+    Platform(PlatformEvent),
+    Renderer(RendererEvent),
+}
+
+impl Into<BBEvent> for OverlayEvent {
+    fn into(self) -> BBEvent {
+        BBEvent::Overlay(self)
+    }
+}
+
+pub enum PlatformEvent {
+    Win32(Win32Event),
+}
+
+impl Into<BBEvent> for PlatformEvent {
+    fn into(self) -> BBEvent {
+        OverlayEvent::Platform(self).into()
+    }
+}
+
+pub enum RendererEvent {
+    DX9(DX9Event),
+}
+
+impl Into<BBEvent> for RendererEvent {
+    fn into(self) -> BBEvent {
+        OverlayEvent::Renderer(self).into()
+    }
+}
 
 pub struct Overlay {
     imgui: imgui::Context,
-    platform: Box<dyn Platform>,
-    #[allow(unused)] // for possible future use
-    renderer: Box<dyn Renderer>,
+    platform: SomePlatform,
+    renderer: SomeRenderer,
     show_hide_key: Key,
     is_showing: bool,
     show_demo_window: bool,
@@ -22,14 +58,14 @@ pub struct Overlay {
 
 impl Overlay {
     pub fn new(config: Config) -> Result<Self, Box<dyn Error>> {
-        let platform = Box::new(match config.platform {
-            RequestedPlatform::Win32 => win32::Platform::new(),
-        }?);
 
-        let renderer = Box::new(match config.renderer {
-            RequestedRenderer::DX9 => dx9::Renderer::new(),
-        }?);
+        let platform = match config.platform {
+            RequestedPlatform::Win32 => SomePlatform::Win32(Win32::new()?),
+        };
 
+        let renderer = match config.renderer {
+            RequestedRenderer::DX9 => SomeRenderer::DX9(DX9::new()?),
+        };
         let mut imgui = imgui::Context::create();
         imgui.style_mut().use_dark_colors();
 
@@ -119,7 +155,7 @@ impl Overlay {
         }]);
     }
 
-    pub fn draw(&mut self) -> &DrawData {
+    pub fn draw(&mut self, subbrick_manager: &mut SubBrickManager) {
         let ui = self.imgui.new_frame();
 
         if ui.is_key_pressed(self.show_hide_key) {
@@ -161,18 +197,15 @@ impl Overlay {
             }
 
             if self.show_bricks {
-                Self::show_bricks(ui, &mut self.show_bricks);
+                Self::show_bricks(ui, &mut self.show_bricks, subbrick_manager);
             }
 
             if self.show_demo_window {
                 ui.show_demo_window(&mut self.show_demo_window);
             }
 
-            BlueBrick::instance().subbrick_manager.draw_all(ui);
+            subbrick_manager.draw_all(ui);
         }
-
-        ui.end_frame_early();
-        self.imgui.render()
     }
 
     fn show_logs(ui: &Ui, opened: &mut bool) {
@@ -183,19 +216,17 @@ impl Overlay {
         });
     }
 
-    fn show_bricks(ui: &Ui, opened: &mut bool) {
+    fn show_bricks(ui: &Ui, opened: &mut bool, subbrick_manager: &mut SubBrickManager) {
         ui.window("Loaded Bricks").size([900.0, 650.0], Condition::FirstUseEver).opened(opened).build(|| {
             if let Some(tab_bar) = ui.tab_bar("BrickTabs") {
-                let subbricks = &mut BlueBrick::instance().subbrick_manager;
-
                 if let Some(libraries) = ui.tab_item("Libraries") {
-                    subbricks.draw_library_list(ui);
+                    subbrick_manager.draw_library_list(ui);
                     
                     libraries.end();
                 }
 
                 if let Some(mods) = ui.tab_item("Mods") {
-                    subbricks.draw_mod_list(ui);
+                    subbrick_manager.draw_mod_list(ui);
 
                     mods.end();
                 }
@@ -205,37 +236,161 @@ impl Overlay {
         });
     }
 
-    pub fn post_draw(&self) {}
+    pub fn post_draw(&self) {
+    }
+
+    pub fn handle_event(&mut self, event: OverlayEvent, subbrick_manager: &mut SubBrickManager) {
+        match event {
+            OverlayEvent::Draw(tx) => {
+                _ = tx.send(self.draw(subbrick_manager));
+            }
+            OverlayEvent::PostDraw(tx) => {
+                _ = tx.send(self.post_draw());
+            }
+            OverlayEvent::Platform(platform) => {
+                match (platform, &mut self.platform) {
+                    (PlatformEvent::Win32(win32_event), SomePlatform::Win32(win32)) => {
+                        win32.handle_event(win32_event);
+                    }
+                    /*_ => {
+                        msgbox::create("Mismatched platform types", "A BlueBrick event was triggered with the wrong platform type", msgbox::IconType::Error);
+                    }*/
+                }
+            }
+            OverlayEvent::Renderer(renderer) => {
+                match (renderer, &mut self.renderer) {
+                    (RendererEvent::DX9(dx9_event), SomeRenderer::DX9(dx9)) => {
+                        dx9.handle_event(dx9_event);
+                    }
+                    /*_ => {
+                        msgbox::create("Mismatched renderer types", "A BlueBrick event was triggered with the wrong renderer type", msgbox::IconType::Error);
+                    }*/
+                }
+            }
+        }
+    }
 }
 
-trait Backend {}
+pub struct OverlayHandle {
+    tx: Sender<BBEvent>,
+    platform: SomePlatformHandle,
+    #[allow(unused)]
+    renderer: SomeRendererHandle,
+}
 
-trait Platform: Backend {
+impl OverlayHandle {
+    pub fn new(config: Config, tx: Sender<BBEvent>) -> Self {
+        // TODO: move this match into the enums
+        let platform = match config.platform {
+            RequestedPlatform::Win32 => SomePlatformHandle::Win32(Win32Handle::new(tx.clone())),
+        };
+
+        let renderer = match config.renderer {
+            RequestedRenderer::DX9 => SomeRendererHandle::DX9(DX9Handle::new(tx.clone())),
+        };
+
+        Self {
+            tx,
+            platform,
+            renderer,
+        }
+    }
+
+    pub fn draw(&self) {
+        let (draw_tx, draw_rx) = mpsc::channel();
+        self.tx.send(OverlayEvent::Draw(draw_tx).into()).expect("Bluebrick thread died");
+        draw_rx.recv().expect("Bluebrick thread dropped draw_tx")
+    }
+
+    pub fn post_draw(&self) {
+        let (pdtx, pdrx) = mpsc::channel();
+        self.tx.send(OverlayEvent::PostDraw(pdtx).into()).expect("Bluebrick thread died");
+        pdrx.recv().expect("Bluebrick thread dropped pdrx")
+    }
+}
+
+trait Platform {
     fn new_frame(&self);
-    fn set_window(&mut self, ptr: *mut ());
 }
 
-trait Renderer: Backend {}
-
-trait BackendHelper<B: BackendHelper<B> + Backend> {
-    fn cast(backend: &dyn Backend) -> &B {
-        unsafe { (ptr::from_ref(backend).cast::<B>()).as_ref().unwrap() }
-    }
-
-    fn get_overlay() -> &'static mut Overlay {
-        &mut super::BlueBrick::instance().overlay
-    }
+enum SomePlatform {
+    Win32(Win32),
 }
 
-trait PlatformHelper<P: PlatformHelper<P> + Platform> : BackendHelper<P> {
-    fn instance() -> &'static P {
-        Self::cast(Self::get_overlay().platform.as_ref())
+impl SomePlatform {
+    fn get_inner(&self) -> &dyn Platform {
+        match self {
+            Self::Win32(win32) => win32,
+        }
     }
 }
 
-#[allow(unused)] // for possible future use
-trait RendererHelper<R: RendererHelper<R> + Renderer> : BackendHelper<R> {
-    fn instance() -> &'static R {
-        Self::cast(Self::get_overlay().renderer.as_ref())
+impl Platform for SomePlatform {
+    fn new_frame(&self) {
+        self.get_inner().new_frame();
     }
+}
+
+trait PlatformHandle {
+    fn new_frame(&self);
+}
+
+enum SomePlatformHandle {
+    Win32(Win32Handle),
+}
+
+impl SomePlatformHandle {
+    fn get_inner(&self) -> &dyn PlatformHandle {
+        match self {
+            Self::Win32(win32) => win32,
+        }
+    }
+}
+
+impl PlatformHandle for SomePlatformHandle {
+    fn new_frame(&self) {
+        self.get_inner().new_frame();
+    }
+}
+
+trait Renderer {
+
+}
+
+enum SomeRenderer {
+    DX9(DX9),
+}
+
+impl SomeRenderer {
+    #[allow(unused)]
+    fn get_inner(&self) -> &dyn Renderer {
+        match self {
+            Self::DX9(dx9) => dx9,
+        }
+    }
+}
+
+impl Renderer for SomeRenderer {
+
+}
+
+trait RendererHandle {
+
+}
+
+enum SomeRendererHandle {
+    DX9(DX9Handle),
+}
+
+impl SomeRendererHandle {
+    #[allow(unused)]
+    fn get_inner(&self) -> &dyn RendererHandle {
+        match self {
+            Self::DX9(dx9) => dx9,
+        }
+    }
+}
+
+impl RendererHandle for SomeRendererHandle {
+
 }

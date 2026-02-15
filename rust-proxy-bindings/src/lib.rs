@@ -13,6 +13,7 @@ pub enum RequestedPlatform {
     Win32,
 }
 
+#[derive(Clone, Copy)]
 #[repr(C)]
 pub struct Config {
     pub platform: RequestedPlatform,
