@@ -3,8 +3,8 @@ fn add_file(files: &mut Vec<String>, file_path: &str) {
     files.push(String::from(file_path));
 }
 
-fn add_imgui_files(files: &mut Vec<String>, file_name: &str, imgui_folder: &str) {
-    let c = format!("src/overlay/{file_name}.cpp");
+fn add_imgui_files(files: &mut Vec<String>, file_name: &str, bb_folder: &str, imgui_folder: &str) {
+    let c = format!("src/overlay/{bb_folder}/{file_name}.cpp");
     let cpp = format!("src/overlay/imgui/{imgui_folder}/{file_name}.cpp");
 
     add_file(files, &c);
@@ -14,8 +14,8 @@ fn add_imgui_files(files: &mut Vec<String>, file_name: &str, imgui_folder: &str)
 fn build_imgui_parts() {
     let mut files = Vec::new();
 
-    add_imgui_files(&mut files, "imgui_impl_win32", "backends");
-    add_imgui_files(&mut files, "imgui_impl_dx9", "backends");
+    add_imgui_files(&mut files, "imgui_impl_win32", "platforms", "backends");
+    add_imgui_files(&mut files, "imgui_impl_dx9", "renderers", "backends");
 
     cc::Build::new()
         .files(files)

@@ -1,4 +1,4 @@
-#include "imgui/backends/imgui_impl_dx9.h"
+#include "../imgui/backends/imgui_impl_dx9.h"
 
 extern "C" {
     bool _ImGui_ImplDX9_Init(IDirect3DDevice9* device) { return ImGui_ImplDX9_Init(device); }
